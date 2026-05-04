@@ -1,42 +1,50 @@
 import os
 import re
-import subprocess
+import wave
+import pygame
+import sys
+from pathlib import Path
 
-PIPER_PATH = "/Users/ellapaulahaechler/Desktop/EDI_Backend/piper/piper_phonemize"
-MODEL_PATH = "/Users/ellapaulahaechler/Desktop/EDI_Backend/piper/en_US-amy-medium.onnx"
+# --- PORTABLE PATH LOGIC ---
+BASE_DIR = Path(__file__).resolve().parent
+
+# Automatically find the site-packages inside your venv
+# This works for any user and any OS
+VENV_PACKAGES = next(BASE_DIR.glob("venv/lib/python*/site-packages"), None)
+
+if VENV_PACKAGES and str(VENV_PACKAGES) not in sys.path:
+    sys.path.insert(0, str(VENV_PACKAGES))
+
+# Now we import the actual engine from the venv
+from piper.voice import PiperVoice
+
+# Paths for data
+PIPER_VOICES_DIR = BASE_DIR / "venv" / "piper_voices"
+OUTPUT_FILE = str(BASE_DIR / "output_edi.wav")
+MODEL_PATH = str(PIPER_VOICES_DIR / "en_US-amy-medium.onnx")
 
 def speak(text):
     try:
-        # clean text
+        # Clean the text (remove emotion tags)
         clean_text = re.sub(r"\[.*?\]\s*\|\s*", "", text)
-        clean_text = re.sub(r'[^\x00-\x7F]+', '', clean_text)
         clean_text = clean_text.replace('"', '').replace("'", "")
-        clean_text = re.sub(r"\*.*?\*", "", clean_text)
+        if not clean_text.strip(): return
 
-        # speak only if there is text left after filtering
-        if not clean_text.strip():
-            return
-        
-        print(f"--- EDI SPEAKING (No Emojis): {clean_text[:40]}... ---")
-            
-        # Piper generates Audio and sends it to ffmpeg
-        # filter description: 
-        # asetrate=44100*1.15 -> voice pitch
-        # atempo=0.9 -> voice speed
-        
-        full_command = (
-            f'echo "{clean_text}" | '
-            f'python3 -m piper --model {MODEL_PATH} --output_raw | '
-            f'ffmpeg -y -f s16le -ar 22050 -ac 1 -i - '
-            f'-af "asetrate=22050*1.2,atempo=0.85, vibrato=f=5:d=0.2" ' 
-            f'output_edi.wav && afplay output_edi.wav'
-        )
-        
-        os.system(full_command)
-    
+        print(f"--- EDI SPEAKING: {clean_text[:50]}... ---")
+
+        # Load Piper and synthesize
+        voice = PiperVoice.load(MODEL_PATH)
+        with wave.open(OUTPUT_FILE, "wb") as wav_file:
+            voice.synthesize(clean_text, wav_file)
+
+        # Playback
+        if os.path.exists(OUTPUT_FILE):
+            pygame.mixer.init()
+            pygame.mixer.music.load(OUTPUT_FILE)
+            pygame.mixer.music.play()
+            while pygame.mixer.music.get_busy():
+                pygame.time.Clock().tick(10)
+            pygame.mixer.quit()
+
     except Exception as e:
-        print(f" Voice Error: {e}")
-            
-if __name__ == "__main__":
-    # Test with emotion tag
-    speak("[JOYFUL] | I am EDI, running locally on your hardware. Hello PBLabs, I am hyped to be here at ETH Zurich!")
+        print(f"Voice Error: {e}")

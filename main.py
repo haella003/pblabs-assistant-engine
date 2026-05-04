@@ -13,8 +13,8 @@ def get_edi_answer(user_text, emotion_rules_text=""):
     
     if "|" in raw_response:
         parts = raw_response.split("|", 1)
-        emotion = parts.replace("[", "").replace("]", "").strip()
-        message = parts.strip()
+        emotion = parts[0].replace("[", "").replace("]", "").strip()
+        message = parts[1].strip()
     else:
         emotion = "NEUTRAL"
         message = raw_response
