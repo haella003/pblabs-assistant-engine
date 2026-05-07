@@ -10,6 +10,8 @@ Install these three things before running the code:
    - Mac: `brew install ffmpeg`
    - Windows: `choco install ffmpeg`
 3. **Python 3.10+**
+   # In your python code, it should look like this:
+   response = ollama.chat(model='gemma4:4b', messages=[...])
 
 ---
 
