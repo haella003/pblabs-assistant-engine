@@ -2,7 +2,10 @@
 
 ## 0. Prerequisites
 Install these three things before running the code:
-1. **Ollama**: [Download here](https://ollama.com/). Run `ollama pull gemma` in your terminal.
+1. **Ollama**: [Download here](https://ollama.com/). 
+   - After installing, you **must** download the specific model used in this project by running this command in your terminal:
+   ```bash
+   ollama pull gemma:4b
 2. **FFmpeg**: 
    - Mac: `brew install ffmpeg`
    - Windows: `choco install ffmpeg`
