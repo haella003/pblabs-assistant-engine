@@ -106,7 +106,7 @@ async def chat_with_audio(request: AudioChatRequest):
     session_id = session_state["session_id"]
     timestamp = datetime.datetime.now().strftime("%H-%M-%S")
     os.makedirs("logs", exist_ok=True)
-    
+    print(request.audio_data)
     # 1. Decode the Base64 string directly into RAM
     try:
         # 1. Decode the Base64 string back into real bytes

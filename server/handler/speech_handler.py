@@ -1,9 +1,11 @@
+import os
 import re
 import wave
 import sys
 from pathlib import Path
 import gc
 import io
+import uuid
 
 # --- PORTABLE PATH LOGIC ---
 HANDLER_DIR = Path(__file__).resolve().parent
@@ -34,29 +36,36 @@ def unload_model():
     gc.collect()
 
 def generate_speech(text):
-    """Generates raw PCM bytes and returns them"""
+    """Generates speech using a temporary file to ensure Piper compatibility."""
     try:
         if piper_voice is None:
             load_model()
 
-        # Clean text
         clean_text = re.sub(r"\[.*?\]\s*\|\s*", "", text)
         clean_text = clean_text.replace('"', '').replace("'", "")
         
-        audio_buffer = io.BytesIO()
+        # Create a unique temp filename
+        temp_filename = f"temp_{uuid.uuid4()}.wav"
         
-        # Piper writes RAW PCM to the buffer
-        # Note: Ensure your piper_voice.synthesize doesn't require a wave object
-        piper_voice.synthesize(clean_text, audio_buffer)
+        # 1. Open a real file for Piper to write to
+        with open(temp_filename, "wb") as f:
+            piper_voice.synthesize(clean_text, f)
         
-        raw_audio_bytes = audio_buffer.getvalue()
+        # 2. Read the bytes back from the file
+        with open(temp_filename, "rb") as f:
+            raw_audio_bytes = f.read()
+            
+        # 3. Delete the temporary file immediately
+        os.remove(temp_filename)
         
-        if not raw_audio_bytes:
-            print("Voice Error: Piper generated 0 bytes.")
+        if not raw_audio_bytes or len(raw_audio_bytes) < 100:
+            print("Voice Error: Piper output was too small.")
             return None
             
         return raw_audio_bytes
 
     except Exception as e:
         print(f"Voice Error: {e}")
+        if 'temp_filename' in locals() and os.path.exists(temp_filename):
+            os.remove(temp_filename)
         return None
