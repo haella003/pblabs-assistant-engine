@@ -1,36 +1,35 @@
-import os
-import subprocess
-import re
+import numpy as np
+from faster_whisper import WhisperModel
+import gc
+import io
 
-# Update these paths to where your files actually are!
-PIPER_PATH = "./server/piper_voices/piper" 
-MODEL_PATH = "./server/piper_voices/models/en_GB-southern_english_female-low.onnx"
+whisper_model = None
 
-def synthesize(text, output_path="response.wav"):
-    """
-    Generates high-quality local speech using Piper.
-    Replaces the old gTTS cloud-based system.
-    """
-    # 1. Strip the emotion tags like [HAPPY] so EDI doesn't literally say "Bracket Happy"
-    clean_text = re.sub(r"\[.*?\]", "", text).strip()
+def load_model():
+    """Loads the model into memory when a session starts."""
+    global whisper_model
+    if whisper_model is None:
+        print("--- LOADING LOCAL WHISPER MODEL ---")
+        # Ensure compute_type matches your hardware capabilities
+        whisper_model = WhisperModel("base", device="cpu", compute_type="int8")
+
+def unload_model():
+    """Unloads the model from memory to free up resources."""
+    global whisper_model
+    whisper_model = None
+    gc.collect()
+
+def transcribe_audio(audio_data: io.BytesIO):
+    """Takes an in-memory audio byte stream, transcribes it, and returns the text."""
+    print("--- TRANSCRIBING ---")
     
-    print(f"Piper Logic: Generating speech for -> {clean_text[:30]}...")
-
-    # 2. Build the command
-    # We use 'quoted' text to handle spaces and special characters safely
-    command = f'echo "{clean_text}" | {PIPER_PATH} --model {MODEL_PATH} --output_file {output_path}'
-    
-    try:
-        # 3. Run Piper
-        subprocess.run(command, shell=True, check=True, capture_output=True)
+    if whisper_model is None:
+        load_model()
         
-        if os.path.exists(output_path) and os.path.getsize(output_path) > 100:
-            print(f"Success: Piper created {output_path}")
-            return True
-        else:
-            print("Piper failed: Audio file is empty or missing.")
-            return False
-            
-    except Exception as e:
-        print(f"Error in Piper Synthesis: {e}")
-        return False
+    # faster-whisper accepts BinaryIO objects directly, avoiding disk writes
+    segments, info = whisper_model.transcribe(audio_data, beam_size=5)
+    
+    full_text = "".join([segment.text for segment in segments])
+        
+    print(f"EDI heard: {full_text}")
+    return full_text.strip()

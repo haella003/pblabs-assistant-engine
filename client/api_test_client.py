@@ -5,8 +5,6 @@ import base64
 import os
 import time
 
-# --- VR HEADSET INTERFACE TEST CLIENT ---
-
 # Attempt to load pygame for audio playback
 try:
     import pygame
@@ -15,12 +13,10 @@ except ImportError:
     PYGAME_AVAILABLE = False
     print("Warning: 'pygame' not found. Audio responses will be saved but not played automatically.")
 
-# parameters
 BASE_URL = "http://127.0.0.1:8080"
 TEMP_WAV = "client_temp_mic.wav"
 OUTPUT_WAV = "client_temp_response.wav"
 
-# pre-check if server is running
 def start_session():
     """Tests the POST /session/start endpoint"""
     print("\n[1/3] Initializing Session and Loading Models...")
@@ -28,8 +24,6 @@ def start_session():
         "initial_emotion": "NEUTRAL",
         "available_emotions": [
             {"name": "HAPPY", "description": "Joyful, energetic, and upbeat."},
-            {"name": "BORED", "description": "Cold, logical, and precise."},
-            {"name": "TENDERNESS", "description": "Empathetic, slow, and melancholic."}
         ]
     }
     try:
@@ -42,11 +36,9 @@ def start_session():
         print(f"Error: {e}")
         return False
 
-# Ears
-# press enter with computer to record 5 seconds of audio from the microphone
 def record_audio(duration=5, fs=44100):
     """Records audio from the default microphone"""
-    print(f"\nRecording for {duration} seconds... Speak now!")
+    print(f"\n🎤 Recording for {duration} seconds... Speak now!")
     recording = sd.rec(int(duration * fs), samplerate=fs, channels=1, dtype='int16')
     sd.wait() # Block until recording is finished
     write(TEMP_WAV, fs, recording)
@@ -68,35 +60,54 @@ def play_audio(filename):
         
     pygame.mixer.quit()
 
-# Messenger
-# sends the recorded audio to the server and handles the response
-# expects a JSON with 'text', 'emotion', and 'audio_base64' (string)
+import base64
+import requests
+import time
+
 def send_chat_audio(filename):
-    """Tests the POST /chat/audio endpoint"""
-    print("Sending audio to server for transcription and LLM processing...")
+    """Encodes audio to Base64 and sends as JSON to the /chat/audio endpoint"""
+    print("⏳ Sending audio to server for transcription and LLM processing...")
     
-    with open(filename, "rb") as f:
-        # We send the audio file as multipart/form-data and generate_audio as Form data
-        files = {"audio_file": (filename, f, "audio/wav")}
-        data = {"current_emotion": "NEUTRAL"}
+    try:
+        # 1. Read the audio file as binary
+        with open(filename, "rb") as f:
+            audio_bytes = f.read()
+        
+        # 2. Encode binary to a Base64 string
+        # This converts "wet" binary data into "dry" text safe for JSON
+        audio_base64 = base64.b64encode(audio_bytes).decode('utf-8')
+        
+        # 3. Build the JSON payload to match your AudioChatRequest model
+        payload = {
+            "audio_data": audio_base64,
+            "generate_audio": True
+        }
         
         start_time = time.time()
-        response = requests.post(f"{BASE_URL}/process-voice", files=files, data=data)
+        # 4. Use the 'json=' parameter to send it as application/json
+        response = requests.post(f"{BASE_URL}/chat/audio", json=payload)
         
-    if response.status_code == 200:
-        # 3. Get the Emotion from the 'envelope' (the Header)
-        emotion = response.headers.get("X-EDI-Emotion", "NEUTRAL")
-        print(f"\nEDI [{emotion}]: Response received.")
+        if response.status_code == 200:
+            res_json = response.json()
+            print(f"DEBUG: Server returned: {res_json}")
+            print(f"Response time: {time.time() - start_time:.2f}s")
+            print(f"\nEDI [{res_json.get('emotion', 'NEUTRAL')}]: {res_json.get('text')}")
+            
+            # 5. Handle the EDI's voice response (Base64 -> File)
+            b64_audio = res_json.get("audio_base64")
+            if b64_audio:
+                audio_bytes = base64.b64decode(b64_audio)
+                with open(OUTPUT_WAV, "wb") as out_f:
+                    out_f.write(audio_bytes)
+                
+                play_audio(OUTPUT_WAV)
+            else:
+                print("No audio data was returned from the server.")
+        else:
+            print(f"Server Error: {response.status_code} - {response.text}")
 
-        # 4. Save the actual sound data to a file
-        with open("edi_response.mp3", "wb") as out_f:
-            out_f.write(response.content)
-        
-        # 5. Play the sound!
-        play_audio("edi_response.mp3")
-        
-    else:
-        print(f"Server Error: {response.status_code} - {response.text}")
+    except Exception as e:
+        print(f"Client Error: {e}")
         
 def end_session():
     """Tests the POST /session/end endpoint"""
