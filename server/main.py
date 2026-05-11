@@ -1,4 +1,5 @@
 from fastapi import FastAPI, UploadFile, File, Form
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
@@ -126,8 +127,11 @@ async def chat_with_audio(request: AudioChatRequest):
     # Pass the path string "logs/last_user_voice.wav"
     user_text = await asyncio.to_thread(audio_handler.transcribe_audio, temp_input)
     if not user_text:
-        return {"error": "Failed to transcribe audio"}, 500
-    
+        return JSONResponse(
+        status_code=500,
+        content={"text": "", "emotion": "NEUTRAL", "message": "Failed to transcribe audio"}
+    )
+        
     # 3. Formulate LLM Response
     session_state["status"] = "thinking"
     full_prompt = user_text + session_state["emotion_rules"]

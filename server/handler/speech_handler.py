@@ -34,25 +34,28 @@ def unload_model():
     gc.collect()
 
 def generate_speech(text):
-    """Generates speech and returns the raw WAV bytes entirely in memory."""
+    """Generates raw PCM bytes and returns them"""
     try:
         if piper_voice is None:
             load_model()
 
+        # Clean text
         clean_text = re.sub(r"\[.*?\]\s*\|\s*", "", text)
         clean_text = clean_text.replace('"', '').replace("'", "")
-        if not clean_text.strip(): 
-            return None
-
-        print(f"--- GENERATING SPEECH: {clean_text[:50]}... ---")
-
-        # Use an in-memory buffer instead of saving to disk
+        
         audio_buffer = io.BytesIO()
-        with wave.open(audio_buffer, "wb") as wav_file:
-            piper_voice.synthesize(clean_text, wav_file)
-
-        # Return the raw bytes from the buffer
-        return audio_buffer.getvalue()
+        
+        # Piper writes RAW PCM to the buffer
+        # Note: Ensure your piper_voice.synthesize doesn't require a wave object
+        piper_voice.synthesize(clean_text, audio_buffer)
+        
+        raw_audio_bytes = audio_buffer.getvalue()
+        
+        if not raw_audio_bytes:
+            print("Voice Error: Piper generated 0 bytes.")
+            return None
+            
+        return raw_audio_bytes
 
     except Exception as e:
         print(f"Voice Error: {e}")

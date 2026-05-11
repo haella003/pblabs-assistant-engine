@@ -4,6 +4,7 @@ from scipy.io.wavfile import write
 import base64
 import os
 import time
+import numpy as np
 
 # Attempt to load pygame for audio playback
 try:
@@ -37,36 +38,43 @@ def start_session():
         return False
 
 def record_audio(duration=5, fs=44100):
-    """Records audio from the default microphone"""
-    print(f"\n🎤 Recording for {duration} seconds... Speak now!")
-    recording = sd.rec(int(duration * fs), samplerate=fs, channels=1, dtype='int16')
-    sd.wait() # Block until recording is finished
-    write(TEMP_WAV, fs, recording)
-    print("Recording saved.")
+    print(f"\n🎤 Recording for {duration} seconds... SPEAK NOW!")
+    
+    # 1. REPLACE THE ID: Change '0' to the number you found in sd.query_devices()
+    device_id = 0  
+    
+    # 2. Record using float32 (the most stable format for macOS)
+    recording = sd.rec(int(duration * fs), samplerate=fs, channels=1, dtype='float32', device=device_id)
+    sd.wait() 
+    
+    # 3. Normalize and convert to 16-bit PCM for the WAV file
+    audio_int16 = (recording * 32767).astype('int16')
+    write(TEMP_WAV, fs, audio_int16)
+    
+    # 4. Final verification
+    file_size = os.path.getsize(TEMP_WAV)
+    print(f"✅ Recording saved: {file_size} bytes")
+    
+    if file_size < 1000:
+        print("⚠️ WARNING: The recording file is nearly empty. Check your Mac mic settings!")
+        
     return TEMP_WAV
 
-def play_audio(filename):
-    """Plays the audio file using pygame"""
-    if not PYGAME_AVAILABLE or not os.path.exists(filename):
-        return
-        
-    print("Playing EDI's response...")
-    pygame.mixer.init()
-    pygame.mixer.music.load(filename)
-    pygame.mixer.music.play()
+def play_raw_audio(raw_bytes, fs=22050):
+    """Plays raw PCM 16-bit Mono audio"""
+    import numpy as np
     
-    while pygame.mixer.music.get_busy():
-        pygame.time.Clock().tick(10)
-        
-    pygame.mixer.quit()
-
-import base64
-import requests
-import time
+    # 1. Convert bytes back to a numpy array (int16)
+    audio_array = np.frombuffer(raw_bytes, dtype=np.int16)
+    
+    # 2. Use sounddevice to play the raw array directly
+    print("Playing raw PCM response...")
+    sd.play(audio_array, fs)
+    sd.wait()
 
 def send_chat_audio(filename):
     """Encodes audio to Base64 and sends as JSON to the /chat/audio endpoint"""
-    print("⏳ Sending audio to server for transcription and LLM processing...")
+    print("Sending audio to server for transcription and LLM processing...")
     
     try:
         # 1. Read the audio file as binary
