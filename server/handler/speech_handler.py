@@ -1,24 +1,26 @@
 import os
 import re
-import wave
-import sys
-from pathlib import Path
-import gc
-import io
 import uuid
+import time
+import subprocess
+import sys
+import gc
+from pathlib import Path
+
 
 # --- PORTABLE PATH LOGIC ---
 HANDLER_DIR = Path(__file__).resolve().parent
 BASE_DIR = HANDLER_DIR.parent.parent
 
+# Ensure venv packages are in path
 VENV_PACKAGES = next(BASE_DIR.glob("venv/lib/python*/site-packages"), None)
 if VENV_PACKAGES and str(VENV_PACKAGES) not in sys.path:
     sys.path.insert(0, str(VENV_PACKAGES))
 
 from piper.voice import PiperVoice
 
-PIPER_VOICES_DIR = "piper_voices"
-MODEL_PATH = str(BASE_DIR / "server/piper_voices/en_US-amy-medium.onnx")
+PIPER_EXE = os.path.join(BASE_DIR, "venv/bin/piper")
+MODEL_PATH = os.path.join(BASE_DIR, "server/piper_voices/en_US-amy-medium.onnx")
 
 piper_voice = None
 
@@ -35,37 +37,47 @@ def unload_model():
     piper_voice = None
     gc.collect()
 
+# --- EDI BRAIN ---
 def generate_speech(text):
-    """Generates speech using a temporary file to ensure Piper compatibility."""
-    try:
-        if piper_voice is None:
-            load_model()
+    """M4-Verified: Uses the Piper binary directly."""
+    temp_filename = f"temp_{uuid.uuid4()}.wav"
+    
+    # Clean text (remove emotion tags and quotes)
+    clean_text = re.sub(r"\[.*?\]\s*\|\s*", "", text)
+    clean_text = clean_text.replace('"', '').replace("'", "")
 
-        clean_text = re.sub(r"\[.*?\]\s*\|\s*", "", text)
-        clean_text = clean_text.replace('"', '').replace("'", "")
+    try:
+        # The command that worked in your test_voice.py
+        command = [
+            PIPER_EXE,
+            "--model", MODEL_PATH,
+            "--output_file", temp_filename
+        ]
         
-        # Create a unique temp filename
-        temp_filename = f"temp_{uuid.uuid4()}.wav"
-        
-        # 1. Open a real file for Piper to write to
-        with open(temp_filename, "wb") as f:
-            piper_voice.synthesize(clean_text, f)
-        
-        # 2. Read the bytes back from the file
-        with open(temp_filename, "rb") as f:
-            raw_audio_bytes = f.read()
+        # Open process and send text via stdin
+        process = subprocess.Popen(
+            command, 
+            stdin=subprocess.PIPE, 
+            stdout=subprocess.PIPE, 
+            stderr=subprocess.PIPE, 
+            text=True
+        )
+        process.communicate(input=clean_text)
+
+        # Verify the file was created and has data
+        if os.path.exists(temp_filename) and os.path.getsize(temp_filename) > 44:
+            with open(temp_filename, "rb") as f:
+                raw_audio_bytes = f.read()
             
-        # 3. Delete the temporary file immediately
-        os.remove(temp_filename)
-        
-        if not raw_audio_bytes or len(raw_audio_bytes) < 100:
-            print("Voice Error: Piper output was too small.")
+            # Clean up the temp file
+            os.remove(temp_filename)
+            print(f"M4 Binary Success: {len(raw_audio_bytes)} bytes.")
+            return raw_audio_bytes
+        else:
+            print("M4 Binary Error: Output file was empty or missing.")
+            if os.path.exists(temp_filename): os.remove(temp_filename)
             return None
-            
-        return raw_audio_bytes
 
     except Exception as e:
-        print(f"Voice Error: {e}")
-        if 'temp_filename' in locals() and os.path.exists(temp_filename):
-            os.remove(temp_filename)
+        print(f"Subprocess Error: {e}")
         return None

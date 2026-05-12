@@ -10,10 +10,11 @@ import asyncio
 import io
 import os
 
-from server.handler import audio_handler
-from server.handler import speech_handler
-from server.handler import llm_handler
-from server.handler.logger_handler import save_chat_log
+from handler import audio_handler
+from handler import speech_handler
+from handler import llm_handler
+from handler.logger_handler import save_chat_log
+from handler.speech_handler import generate_speech
 
 app = FastAPI()
 
@@ -23,6 +24,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+PERSONA_PATH = os.path.join("server", "personas", "EDI_RZ_1.txt")
 
 # Added status tracking for the client to poll
 session_state = {
@@ -106,37 +109,50 @@ async def chat_with_audio(request: AudioChatRequest):
     session_id = session_state["session_id"]
     timestamp = datetime.datetime.now().strftime("%H-%M-%S")
     os.makedirs("logs", exist_ok=True)
-    print(request.audio_data)
-    # 1. Decode the Base64 string directly into RAM
+
+    # 1. Decode Audio
     try:
-        # 1. Decode the Base64 string back into real bytes
         audio_bytes = base64.b64decode(request.audio_data)
-        temp_input = f"logs/input_{timestamp}.wav"
-        
-        # 2. SAVE to a temporary file (Whisper is much happier with files)
         temp_input = "logs/last_user_voice.wav"
         with open(temp_input, "wb") as f:
             f.write(audio_bytes)
-            
     except Exception as e:
         print(f"Decoding Error: {e}")
-        return {"error": "Failed to decode audio data"}, 400
+        return JSONResponse(status_code=400, content={"error": "Failed to decode audio data"})
 
-    # 3. Transcribe using the FILE PATH
+    # 2. Transcribe
     session_state["status"] = "transcribing"
-    # Pass the path string "logs/last_user_voice.wav"
     user_text = await asyncio.to_thread(audio_handler.transcribe_audio, temp_input)
     if not user_text:
-        return JSONResponse(
-        status_code=500,
-        content={"text": "", "emotion": "NEUTRAL", "message": "Failed to transcribe audio"}
-    )
+        return {"text": "", "emotion": "NEUTRAL", "message": "No speech detected"}
+    
+    await asyncio.to_thread(save_chat_log, "User", user_text, "NEUTRAL", session_id)
         
-    # 3. Formulate LLM Response
+    # 3. Formulate LLM Response with Persona File
     session_state["status"] = "thinking"
-    full_prompt = user_text + session_state["emotion_rules"]
+    
+    # Path to your persona file
+    persona_path = os.path.join("server", "personas", "EDI_RZ_1.txt")
+    
+    try:
+        with open(persona_path, "r", encoding="utf-8") as f:
+            persona_content = f.read()
+    except Exception as e:
+        print(f"Persona File Error: {e}")
+        persona_content = "You are EDI. Be witty and brief."
+
+    # Force strict brevity and emotion rules
+    full_prompt = (
+        f"{persona_content}\n\n"
+        f"CURRENT CONTEXT: You are talking to a student about their thesis.\n"
+        f"{session_state['emotion_rules']}\n"
+        f"STRICT LIMIT: Maximum 1 sentence. Speak like a friend.\n\n"
+        f"User says: {user_text}"
+    )
+
     raw_response = await asyncio.to_thread(llm_handler.get_edi_response, full_prompt)
     
+    # Parse Emotion and Message
     if "|" in raw_response:
         parts = raw_response.split("|", 1)
         emotion = parts[0].replace("[", "").replace("]", "").strip()
@@ -146,24 +162,20 @@ async def chat_with_audio(request: AudioChatRequest):
         message = raw_response
 
     session_state["current_emotion"] = emotion
-
-    # Log EDI response
+    
     await asyncio.to_thread(save_chat_log, "EDI", message, emotion, session_id)
 
-    # 4. Generate Voice in Memory (Optional)
+    # 4. Generate & Play Voice (FORCED FOR TESTING)
     audio_base64 = None
-    if request.generate_audio:  # Updated to use request property
-        session_state["status"] = "generating_audio"
-        wav_bytes = await asyncio.to_thread(speech_handler.generate_speech, message)
-        if wav_bytes:
-            audio_base64 = base64.b64encode(wav_bytes).decode('utf-8')
-            
-            # --- Save generated audio to disk for evaluation ---
-            edi_audio_path = f"logs/{session_id}_{timestamp}_edi.wav"
-            with open(edi_audio_path, "wb") as f:
-                f.write(wav_bytes)
-
-    # 5. Return JSON payload and reset to idle
+    wav_bytes = await asyncio.to_thread(speech_handler.generate_speech, message)
+    
+    if wav_bytes:
+        # Convert the raw sound into a text string (Base64) 
+        # so it can travel over the internet/network safely.
+        audio_base64 = base64.b64encode(wav_bytes).decode('utf-8')
+        print(f"✅ Audio encoded and ready to send: {len(audio_base64)} characters")
+    
+    # 5. Return JSON payload
     session_state["status"] = "idle"
     return {
         "text": message,
@@ -173,4 +185,5 @@ async def chat_with_audio(request: AudioChatRequest):
 
 if __name__ == "__main__":
     # Remove the string "main:app" and the reload=True (direct objects don't support reload)
-    uvicorn.run(app, host="127.0.0.1", port=8080)
+    # change host an port accordingly
+    uvicorn.run(app, host="0.0.0.0", port=8080) 
