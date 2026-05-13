@@ -1,48 +1,35 @@
 import subprocess
 import os
-import time
+
+# Test the Piper TTS engine directly to ensure it's working before integrating into the main server.
 
 # --- CONFIGURATION ---
-# 1. Path to your Piper binary (Check if this exists!)
-PIPER_EXE = "../../venv/bin/piper" 
-# 2. Path to your Model
-MODEL_PATH = "../piper_voices/en_US-amy-medium.onnx"
-# 3. Output file
-OUTPUT_WAV = "test_output.wav"
+PIPER_EXE = "venv/bin/piper"
+MODEL_PATH = "server/piper_voices/en_US-amy-medium.onnx"
+OUTPUT_WAV = "server/testing/test_voice_output.wav"
 
-test_text = "Hello! I am testing the voice engine on my new M 4 MacBook Pro."
-
-def test_binary_synthesis():
-    print(f"--- DIAGNOSTIC: Testing Binary at {PIPER_EXE} ---")
+def test_voice():
+    test_text = "This is a direct test of the Piper voice engine."
     
-    if not os.path.exists(PIPER_EXE):
-        print(f"❌ ERROR: Piper binary not found at {PIPER_EXE}")
+    # Ensure the model exists
+    if not os.path.exists(MODEL_PATH):
+        print(f"Model not found at {MODEL_PATH}")
         return
 
-    # The command we would normally run in the terminal
-    command = [
-        PIPER_EXE,
-        "--model", MODEL_PATH,
-        "--output_file", OUTPUT_WAV
-    ]
-
+    print(f"Synthesizing: '{test_text}'")
+    
+    # Command to run Piper directly
+    command = f'echo "{test_text}" | {PIPER_EXE} --model {MODEL_PATH} --output_file {OUTPUT_WAV}'
+    
     try:
-        print("Running Piper subprocess...")
-        process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        
-        # Send text and wait for result
-        stdout, stderr = process.communicate(input=test_text)
-
-        if os.path.exists(OUTPUT_WAV) and os.path.getsize(OUTPUT_WAV) > 0:
-            print(f"✅ SUCCESS! Created {OUTPUT_WAV} ({os.path.getsize(OUTPUT_WAV)} bytes)")
-            # Try to play it
+        os.system(command)
+        if os.path.exists(OUTPUT_WAV):
+            print(f"Success! Created {OUTPUT_WAV}")
             os.system(f"afplay {OUTPUT_WAV}")
         else:
-            print("❌ FAILED: File is still empty or wasn't created.")
-            print(f"Piper Error Output: {stderr}")
-
+            print("Failed to create audio file.")
     except Exception as e:
-        print(f"❌ EXECUTION ERROR: {e}")
+        print(f"Error: {e}")
 
 if __name__ == "__main__":
-    test_binary_synthesis()
+    test_voice()

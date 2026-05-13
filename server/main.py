@@ -123,6 +123,7 @@ async def chat_with_audio(request: AudioChatRequest):
     # 2. Transcribe
     session_state["status"] = "transcribing"
     user_text = await asyncio.to_thread(audio_handler.transcribe_audio, temp_input)
+    
     if not user_text:
         return {"text": "", "emotion": "NEUTRAL", "message": "No speech detected"}
     
@@ -169,11 +170,16 @@ async def chat_with_audio(request: AudioChatRequest):
     audio_base64 = None
     wav_bytes = await asyncio.to_thread(speech_handler.generate_speech, message)
     
-    if wav_bytes:
-        # Convert the raw sound into a text string (Base64) 
-        # so it can travel over the internet/network safely.
-        audio_base64 = base64.b64encode(wav_bytes).decode('utf-8')
-        print(f"✅ Audio encoded and ready to send: {len(audio_base64)} characters")
+    # Check if the client set generate_audio to True
+    if request.generate_audio:
+        print(f"--- STARTING AUDIO GENERATION FOR: {emotion} ---")
+        wav_bytes = await asyncio.to_thread(speech_handler.generate_speech, message)
+        
+        if wav_bytes:
+            audio_base64 = base64.b64encode(wav_bytes).decode('utf-8')
+            print(f"Audio encoded: {len(audio_base64)} characters")
+    else:
+        print("⏭Skipping audio generation (generate_audio=False)")
     
     # 5. Return JSON payload
     session_state["status"] = "idle"
@@ -186,4 +192,4 @@ async def chat_with_audio(request: AudioChatRequest):
 if __name__ == "__main__":
     # Remove the string "main:app" and the reload=True (direct objects don't support reload)
     # change host an port accordingly
-    uvicorn.run(app, host="0.0.0.0", port=8080) 
+    uvicorn.run(app, host="127.0.0.1", port=8080) 

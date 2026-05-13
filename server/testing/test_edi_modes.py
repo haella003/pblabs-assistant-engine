@@ -1,14 +1,17 @@
+import base64
+from json.tool import main
 import requests
 import os
+import io
 import sounddevice as sd
-import numpy as np
+import soundfile as sf
+import numpy
 import wave
-import sys
 
 # --- CONFIGURATION ---
-API_URL = "http://127.0.0.1:8080/chat"  # Update if your endpoint name is different
+API_URL = "http://127.0.0.1:8080/chat/audio"
 TEMP_AUDIO = "temp_recording.wav"
-SAMPLE_RATE = 16000  # Standard for Whisper
+SAMPLE_RATE = 16000
 
 def record_audio(duration=5):
     """Records audio from the mic and saves to a temp WAV file."""
@@ -22,48 +25,56 @@ def record_audio(duration=5):
         wf.writeframes(recording.tobytes())
     return TEMP_AUDIO
 
-def send_to_edi(text=None, audio_path=None):
-    """Sends either text or audio to your FastAPI backend."""
-    try:
-        if audio_path:
-            with open(audio_path, 'rb') as f:
-                files = {'file': f}
-                response = requests.post(f"{API_URL}/voice", files=files)
-        else:
-            response = requests.post(API_URL, json={"text": text})
-            
-        return response.json()
-    except Exception as e:
-        print(f"Connection Error: {e}")
-        return None
+def play_audio(audio_bytes):
+    """Plays audio bytes."""
+    # Wrap bytes in a buffer so soundfile can read it like a file
+    data, fs = sf.read(io.BytesIO(audio_bytes))
+    sd.play(data, fs)
+    sd.wait() # Wait until finished playing
 
 def main():
-    print("--- EDI TEST BENCH: TEXT OR VOICE ---")
+    print("--- EDI TESTER ---")
+    
     while True:
-        mode = input("\nChoose Mode: [T]ext, [V]oice, or [Q]uit: ").lower()
-        
-        if mode == 'q':
+        mode = input("\n[V]oice Record, [Q]uit: ").lower()
+        if mode == 'q': 
             break
+        
+        if mode == 'v':
+            # --- MOVE THE QUESTION HERE ---
+            use_voice = input("Should EDI speak for this response? (y/n): ").lower() == 'y'
             
-        if mode == 't':
-            user_text = input("You (Type): ")
-            data = send_to_edi(text=user_text)
-            if data:
-                print(f"EDI (Text): {data.get('response')}")
-                # If your backend sends audio path, you could play it here
+            record_audio()
+            with open(TEMP_AUDIO, "rb") as f:
+                audio_b64 = base64.b64encode(f.read()).decode('utf-8')
+        else:
+            continue
+
+        payload = {
+            "audio_data": audio_b64,
+            "generate_audio": use_voice
+        }
+
+        try:
+            print("Sending to EDI...")
+            response = requests.post(API_URL, json=payload)
+            data = response.json()
+
+            if "text" in data:
+                print(f"\nEDI [{data['emotion']}]: {data['text']}")
                 
-        elif mode == 'v':
-            audio_file = record_audio()
-            data = send_to_edi(audio_path=audio_file)
-            if data:
-                print(f"EDI (Transcribed): {data.get('user_text')}")
-                print(f"EDI (Response): {data.get('response')}")
-                # To hear the voice, your backend should be generating the .wav 
-                # and this script can play it using 'os.system' or 'pygame'
-                if data.get('audio_url'):
-                    print("Playing EDI's voice...")
-                    # Example for Mac:
-                    os.system(f"afplay {data.get('audio_url')}")
+                # This check ensures we only play if the server actually sent audio
+                if data.get("audio_base64"):
+                    print("Playing response...")
+                    audio_bytes = base64.b64decode(data["audio_base64"])
+                    play_audio(audio_bytes)
+                else:
+                    print("(Voice skipped as requested)")
+            else:
+                print(f"Server Error: {data}")
+        
+        except Exception as e:
+            print(f"Connection Failed: {e}")
 
 if __name__ == "__main__":
     main()
