@@ -163,7 +163,7 @@ async def chat_with_audio(request: AudioChatRequest):
 
     # Memory logic
     if "chat_history" not in session_state: session_state["chat_history"] = []
-    history_lines = session_state.get("chat_history", [])[-3:]
+    history_lines = session_state.get("chat_history", [])[-5:]
     chat_history = "\n".join([f"User: {c['u']}\nEDI: {c['e']}" for c in history_lines])
 
     full_prompt = template.format(

@@ -46,7 +46,7 @@ def build_knowledge_index(vault_path):
     index.add(np.array(embeddings).astype('float32'))
     print(f"Knowledge Vault Indexed: {len(chunks)} chunks ready.")
 
-def get_relevant_context(query, k=3):
+def get_relevant_context(query, k=5):
     """Finds relevant chunks and forces a flat integer list to avoid errors."""
     global index, chunks
     if index is None or not chunks: 
@@ -62,7 +62,7 @@ def get_relevant_context(query, k=3):
     try:
         flat_indices = [int(i) for i in indices.flatten()]
     except Exception as e:
-        print(f"❌ Flattening error: {e}")
+        print(f"Flattening error: {e}")
         return ""
 
     relevant_chunks = []
@@ -74,8 +74,8 @@ def get_relevant_context(query, k=3):
     context = "\n".join(relevant_chunks)
     
     if context:
-        print(f"✅ Librarian found {len(relevant_chunks)} chunks.")
+        print(f"Librarian found {len(relevant_chunks)} chunks.")
     else:
-        print("⚠️ Librarian found nothing.")
+        print("Librarian found nothing.")
         
     return context

@@ -10,6 +10,11 @@
 <|CONVERSATION_HISTORY|>
 {chat_history}
 
+<|INSTRUCTION|>
+Use the Conversation History above to understand what "it", "that", or "her" refers to. 
+Answer the User Input based ONLY on the Knowledge Vault Context. 
+If the info is missing, say you don't know—don't guess!
+
 <|USER_INPUT|>
 {user_text}
 
