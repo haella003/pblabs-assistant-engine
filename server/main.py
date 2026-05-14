@@ -9,6 +9,7 @@ import datetime
 import asyncio
 import io
 import os
+import fitz
 
 from handler import audio_handler
 from handler import speech_handler
@@ -25,7 +26,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-PERSONA_PATH = os.path.join("server", "personas", "EDI_RZ_1.txt")
+# At the top of main.py
+PERSONA_PATH = os.path.join("server", "personas", "EDI_Bachelorthesis.txt")
+KNOWLEDGE_PATH = os.path.join("server", "knowledge_vault")
 
 # Added status tracking for the client to poll
 session_state = {
@@ -125,6 +128,7 @@ async def chat_with_audio(request: AudioChatRequest):
     user_text = await asyncio.to_thread(audio_handler.transcribe_audio, temp_input)
     
     if not user_text:
+        if os.path.exists(temp_input): os.remove(temp_input)
         return {"text": "", "emotion": "NEUTRAL", "message": "No speech detected"}
     
     await asyncio.to_thread(save_chat_log, "User", user_text, "NEUTRAL", session_id)
@@ -132,25 +136,45 @@ async def chat_with_audio(request: AudioChatRequest):
     # 3. Formulate LLM Response with Persona File
     session_state["status"] = "thinking"
     
-    # Path to your persona file
-    persona_path = os.path.join("server", "personas", "EDI_RZ_1.txt")
+    # a. Load the Persona
+    with open(PERSONA_PATH, "r") as f:
+        persona_content = f.read()
+        
+    # b. Load the specific Knowledge folder (Everything inside)
+    knowledge_content = ""
+    if os.path.exists(KNOWLEDGE_PATH) and os.path.isdir(KNOWLEDGE_PATH):
+        for filename in os.listdir(KNOWLEDGE_PATH):
+            file_path = os.path.join(KNOWLEDGE_PATH, filename)
+            
+            # Read Text Files
+            if filename.endswith(".txt"):
+                try:
+                    with open(file_path, "r", encoding="utf-8") as f:
+                        knowledge_content += f"\n--- Source: {filename} ---\n{f.read()}\n"
+                except: pass
+            
+            # Read PDF Files
+            elif filename.endswith(".pdf"):
+                try:
+                    doc = fitz.open(file_path)
+                    pdf_text = "".join([page.get_text() for page in doc])
+                    knowledge_content += f"\n--- Source: {filename} ---\n{pdf_text}\n"
+                    doc.close()
+                except Exception as e:
+                    print(f"Could not read PDF {filename}: {e}")
     
-    try:
-        with open(persona_path, "r", encoding="utf-8") as f:
-            persona_content = f.read()
-    except Exception as e:
-        print(f"Persona File Error: {e}")
-        persona_content = "You are EDI. Be witty and brief."
+    if not knowledge_content:
+        knowledge_content = "No specific data found in the vault."
 
-    # Force strict brevity and emotion rules
+   # c. Combine them into the prompt
     full_prompt = (
-        f"{persona_content}\n\n"
-        f"CURRENT CONTEXT: You are talking to a student about their thesis.\n"
+        f"SYSTEM INSTRUCTIONS:\n{persona_content}\n\n"
+        f"KNOWLEDGE CONTEXT:\n{knowledge_content}\n\n"
+        f"USER INPUT: {user_text}\n"
         f"{session_state['emotion_rules']}\n"
-        f"STRICT LIMIT: Maximum 1 sentence. Speak like a friend.\n\n"
-        f"User says: {user_text}"
+        f"5. LIMIT: Use exactly one or two short sentences."
     )
-
+    
     raw_response = await asyncio.to_thread(llm_handler.get_edi_response, full_prompt)
     
     # Parse Emotion and Message

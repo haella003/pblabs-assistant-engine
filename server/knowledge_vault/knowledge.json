@@ -23,10 +23,6 @@
     "keywords": ["curtain", "divide", "wheel", "cord", "rail", "acoustic"],
     "info": "[DISTRACTIBLE] | Oh! The curtains! You can pull the cords to create secret zones. Just check the wheels first—if they snag, my data streams get all tangled!"
   },
-  "gallery_storage": {
-    "keywords": ["gallery", "rz d01", "storage", "locker", "belongings", "upstairs", "snacks"],
-    "info": "[CURIOUS] | Have you explored the upstairs gallery in RZ D01? It's excellent for team huddles. You can store your physical artifacts in the lockers underneath."
-  },
   "default": {
     "keywords": [],
     "info": "[BORED] | My memory banks are coming up empty on that one. M usually handles the dull stuff! Perhaps you want to hear about the VR headsets or how to chop up the room with curtains?"
