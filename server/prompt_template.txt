@@ -1,0 +1,16 @@
+<|SYSTEM_RULES|>
+{system_rules}
+
+<|PERSONALITY_PROFILE|>
+{persona_content}
+
+<|KNOWLEDGE_VAULT_CONTEXT|>
+{knowledge_context}
+
+<|CONVERSATION_HISTORY|>
+{chat_history}
+
+<|USER_INPUT|>
+{user_text}
+
+<|ASSISTANT_RESPONSE|>

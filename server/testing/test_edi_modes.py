@@ -36,22 +36,28 @@ def main():
     print("--- EDI TESTER ---")
     
     while True:
-        mode = input("\n[V]oice Record, [Q]uit: ").lower()
+        mode = input("\n[V]oice Record, [T]ext Input, [Q]uit: ").lower()
         if mode == 'q': 
             break
         
+        audio_b64 = ""
+        text_query = ""
+        
+        # Determine if EDI should speak
+        use_voice = input("Should EDI speak for this response? (y/n): ").lower() == 'y'
+
         if mode == 'v':
-            # --- MOVE THE QUESTION HERE ---
-            use_voice = input("Should EDI speak for this response? (y/n): ").lower() == 'y'
-            
             record_audio()
             with open(TEMP_AUDIO, "rb") as f:
                 audio_b64 = base64.b64encode(f.read()).decode('utf-8')
+        elif mode == 't':
+            text_query = input("Type your question for EDI: ")
         else:
             continue
 
         payload = {
-            "audio_data": audio_b64,
+            "audio_data": audio_b64, # Empty if text mode
+            "text_query": text_query, # New field!
             "generate_audio": use_voice
         }
 

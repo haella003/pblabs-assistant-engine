@@ -14,6 +14,7 @@ import fitz
 from handler import audio_handler
 from handler import speech_handler
 from handler import llm_handler
+from handler import knowledge_handler
 from handler.logger_handler import save_chat_log
 from handler.speech_handler import generate_speech
 
@@ -51,7 +52,8 @@ class EndRequest(BaseModel):
     reason: str
 
 class AudioChatRequest(BaseModel):
-    audio_data: str
+    audio_data: Optional[str] = ""
+    text_query: Optional[str] = ""
     generate_audio: bool = False
 
 @app.get("/status")
@@ -82,6 +84,7 @@ def start_session(request: StartRequest):
     # Preload LLM into memory
     llm_handler.preload_model()
     llm_handler.reset_memory()
+    knowledge_handler.build_knowledge_index(KNOWLEDGE_PATH)
     
     session_state["status"] = "idle"
     return {
@@ -110,71 +113,68 @@ async def chat_with_audio(request: AudioChatRequest):
         return {"error": "Session is not active. Call /session/start first."}
         
     session_id = session_state["session_id"]
-    timestamp = datetime.datetime.now().strftime("%H-%M-%S")
+    user_text = ""
+    temp_input = "logs/last_user_voice.wav"
     os.makedirs("logs", exist_ok=True)
 
-    # 1. Decode Audio
-    try:
-        audio_bytes = base64.b64decode(request.audio_data)
-        temp_input = "logs/last_user_voice.wav"
-        with open(temp_input, "wb") as f:
-            f.write(audio_bytes)
-    except Exception as e:
-        print(f"Decoding Error: {e}")
-        return JSONResponse(status_code=400, content={"error": "Failed to decode audio data"})
+    # --- 1. NEW LOGIC: CHOOSE BETWEEN TEXT OR AUDIO ---
+    if request.text_query:
+        # User typed their question
+        user_text = request.text_query
+        print(f"Received Text Input: {user_text}")
+    else:
+        # User sent audio data
+        try:
+            audio_bytes = base64.b64decode(request.audio_data)
+            with open(temp_input, "wb") as f:
+                f.write(audio_bytes)
+            
+            session_state["status"] = "transcribing"
+            user_text = await asyncio.to_thread(audio_handler.transcribe_audio, temp_input)
+            
+            # Cleanup audio file immediately after transcribing
+            if os.path.exists(temp_input): os.remove(temp_input)
+        except Exception as e:
+            print(f"Decoding Error: {e}")
+            return JSONResponse(status_code=400, content={"error": "Failed to decode audio data"})
 
-    # 2. Transcribe
-    session_state["status"] = "transcribing"
-    user_text = await asyncio.to_thread(audio_handler.transcribe_audio, temp_input)
-    
     if not user_text:
-        if os.path.exists(temp_input): os.remove(temp_input)
-        return {"text": "", "emotion": "NEUTRAL", "message": "No speech detected"}
+        return {"text": "", "emotion": "NEUTRAL", "message": "No input detected"}
     
+    # Log User Input
     await asyncio.to_thread(save_chat_log, "User", user_text, "NEUTRAL", session_id)
         
-    # 3. Formulate LLM Response with Persona File
+    # --- 2. FORMULATE LLM RESPONSE ---
     session_state["status"] = "thinking"
     
-    # a. Load the Persona
-    with open(PERSONA_PATH, "r") as f:
-        persona_content = f.read()
-        
-    # b. Load the specific Knowledge folder (Everything inside)
-    knowledge_content = ""
-    if os.path.exists(KNOWLEDGE_PATH) and os.path.isdir(KNOWLEDGE_PATH):
-        for filename in os.listdir(KNOWLEDGE_PATH):
-            file_path = os.path.join(KNOWLEDGE_PATH, filename)
-            
-            # Read Text Files
-            if filename.endswith(".txt"):
-                try:
-                    with open(file_path, "r", encoding="utf-8") as f:
-                        knowledge_content += f"\n--- Source: {filename} ---\n{f.read()}\n"
-                except: pass
-            
-            # Read PDF Files
-            elif filename.endswith(".pdf"):
-                try:
-                    doc = fitz.open(file_path)
-                    pdf_text = "".join([page.get_text() for page in doc])
-                    knowledge_content += f"\n--- Source: {filename} ---\n{pdf_text}\n"
-                    doc.close()
-                except Exception as e:
-                    print(f"Could not read PDF {filename}: {e}")
-    
-    if not knowledge_content:
-        knowledge_content = "No specific data found in the vault."
+    # Load all your new external files
+    try:
+        with open(os.path.join("server", "personas", "system_rules.txt"), "r") as f:
+            system_rules = f.read()
+        with open(PERSONA_PATH, "r") as f:
+            persona_content = f.read()
+        with open("server/prompt_template.txt", "r") as f:
+            template = f.read()
+    except Exception as e:
+        return {"error": f"Missing template or rule files: {e}"}
 
-   # c. Combine them into the prompt
-    full_prompt = (
-        f"SYSTEM INSTRUCTIONS:\n{persona_content}\n\n"
-        f"KNOWLEDGE CONTEXT:\n{knowledge_content}\n\n"
-        f"USER INPUT: {user_text}\n"
-        f"{session_state['emotion_rules']}\n"
-        f"5. LIMIT: Use exactly one or two short sentences."
+    # Context from FAISS
+    knowledge_context = knowledge_handler.get_relevant_context(user_text, k=3)
+
+    # Memory logic
+    if "chat_history" not in session_state: session_state["chat_history"] = []
+    history_lines = session_state.get("chat_history", [])[-3:]
+    chat_history = "\n".join([f"User: {c['u']}\nEDI: {c['e']}" for c in history_lines])
+
+    full_prompt = template.format(
+        system_rules=system_rules,
+        persona_content=persona_content,
+        knowledge_context=knowledge_context,
+        chat_history=chat_history,
+        user_text=user_text
     )
-    
+
+    # Send to LLM
     raw_response = await asyncio.to_thread(llm_handler.get_edi_response, full_prompt)
     
     # Parse Emotion and Message
@@ -183,34 +183,28 @@ async def chat_with_audio(request: AudioChatRequest):
         emotion = parts[0].replace("[", "").replace("]", "").strip()
         message = parts[1].strip()
     else:
-        emotion = "NEUTRAL"
-        message = raw_response
+        emotion, message = "NEUTRAL", raw_response
 
+    # --- 3. SAVE TO MEMORY ---
+    # We save the current exchange so EDI remembers it next time
+    session_state["chat_history"].append({"u": user_text, "e": message})
     session_state["current_emotion"] = emotion
-    
     await asyncio.to_thread(save_chat_log, "EDI", message, emotion, session_id)
 
-    # 4. Generate & Play Voice (FORCED FOR TESTING)
+    # --- 4. GENERATE VOICE ---
     audio_base64 = None
-    wav_bytes = await asyncio.to_thread(speech_handler.generate_speech, message)
-    
-    # Check if the client set generate_audio to True
     if request.generate_audio:
         print(f"--- STARTING AUDIO GENERATION FOR: {emotion} ---")
         wav_bytes = await asyncio.to_thread(speech_handler.generate_speech, message)
-        
         if wav_bytes:
             audio_base64 = base64.b64encode(wav_bytes).decode('utf-8')
-            print(f"Audio encoded: {len(audio_base64)} characters")
-    else:
-        print("⏭Skipping audio generation (generate_audio=False)")
     
-    # 5. Return JSON payload
     session_state["status"] = "idle"
     return {
         "text": message,
         "emotion": emotion,
-        "audio_base64": audio_base64
+        "audio_base64": audio_base64,
+        "user_text": user_text # Useful for debugging!
     }
 
 if __name__ == "__main__":
