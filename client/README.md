@@ -1,9 +1,8 @@
-# Client
+# ./client
 
 This directory is designated for the frontend user interface and Mixed Reality (MR) application scripts that interact with the backend engine.
 
 ## Directory Contents
-
 * **`api_test_client.py`**: A python script used to test and verify the raw connection between the client side and the FastAPI backend server endpoints. It simulates basic network requests to ensure everything communicates properly before launching full headset apps.
 
 ## Current Modes
