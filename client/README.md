@@ -1,4 +1,4 @@
-# ./client
+# Client
 
 This directory is designated for the frontend user interface and Mixed Reality (MR) application scripts that interact with the backend engine.
 
