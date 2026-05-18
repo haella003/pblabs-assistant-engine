@@ -1,8 +1,36 @@
 # Local LLM Assistant Engine
 
-
 ## Project Overview
-XYZ
+
+### About
+This project develops a mixed reality setup for PBLabs room instructions. PBLabs is a bookable ETH space for group workshops and meetings. Currently,
+a lab staff member personally explains rules and equipment. The new solution uses Spatial Computing headset (Meta Quest 3) to provide an interactive introduction by a digital version of a Lab instructor called M. Next to M there will be an additional creature called EDI which should make the user experience (UX) more interactive. During this onboarding, users can freely talk with EDI, ask questions about the space, and receive tailored guidance on rules and equipment usage. A Python-based backend with a local large language model (LLM) processes their speech and generates replies, enabling natural, real-time question-answering in the mixed reality (MR) environment.
+
+This repository contains the core intelligence engine. Built as a Semester Project the system introduces **EDI (EDucatIon)** - an interactive lab assistant. The backend architecture uses a FastAPI framework to orchestrate a fully localized AI stack, combining automated Speech-to-Text (SST) with Whisper, Retrieval-Augmented Generation with FAISS and Gemma 3, and fast local Text-to-Speech (TTS) synthesis with Piper. 
+
+### The Reason for the Project
+This project introduces a new approach for conveying educational, operational, and research content within an academic environment. By developing an adaptive, spatial tutoring prototype, it demonstrates how future university laboratories can scale their teaching and infrastructure. Traditionally, onboarding students and researchers require time and manual coordination from lab supervisors. Instead of relying on written manuals or a generic chatbot, this project brings static research data to life by injecting it directly into a **Mixed Reality (MR) spatial environment with a strong emphasis on personality-driven interaction**. 
+
+The project implements three primary pillars:
+
+1. **Context-Aware Retrieval-Augmented Generation (RAG):** EDI doesn't just chat; it uses semantic search to "read" the physical lab's documentation and precise thesis data, answering questions more accurate.
+2. **First-Person Spatial Persona:** EDI is designed as a playful, digital entity materialized as a distinct physical structure (orange to match the room's interior). By processing dynamic emotion tags alongside the prompt, the backend allows EDI to react and state with conversational feedback.
+4. **Fully Local & Private Stack:** To ensure complete data privacy and low-latency interaction inside the lab, the entire pipeline runs locally on a single machine without relying on external cloud APIs.
+
+### Future Work
+This repository is a first version and forms the basic technical framework. While this core engine already handles the basic local AI logic and voice interactions, there is still a lot that can be improved. Moving forward, the goal is to expand this prototype into a reliable, permanent setup that runs seamlessly inside the Media & Methods Lab (MML). 
+
+1. **Advanced Interaction Mechanics & Session Lifecycle**
+* **Dynamic Voice Activity Detection (VAD):** Implementing an audio gating logic to ensure EDI only speaks when the user is finished talking, immediately silences itself if interrupted by the user, and smoothly returns to an active listening state.
+* **Session Lifecycle Boundaries:** Developing and testing definitive session termination logic (e.g., explicit "Goodbye" intent detection or timeout parameters) to clear conversational buffers, reset state flags, and prepare the engine for the next user.
+
+2. **Multi-Deployment Modalities**
+* **Standalone Desktop/Mobile Chat Application:** Packaging the backend pipeline alongside a lightweight frontend UI as a downloadable application, allowing students to text-chat with EDI's knowledge base outside of the physical lab room context.
+* **Headset-Specific Conversational Tweaks:** Branching the backend orchestrator to support tailored system prompts and a bigger variety of emotional tag triggers.
+
+3. **Unified Spatial Integration & Final Synthesis**
+* **The Full Spatial Ecosystem:** The ultimate milestone is the seamless fusion of all development layers—unifying this Python backend engine with the Unreal Engine frontend client to synchronize live state events (`idle`, `transcribing`, `thinking`) directly with real-time spatial animations, particle effects, and character model triggers.
+* **Unified Setup Installer:** Replacing manual command-line dependency setups with a compiled, single-click installer or Dockerized architecture to automate the configuration of local Ollama, Whisper, and Piper paths, lowering the barrier to entry for other research labs.
 
 ## Directory Structure
 
@@ -32,6 +60,15 @@ pblabs-mr-onboarding-core/
 ├── requirements.txt                # System Python dependencies
 └── README.md                       # Repository overview documentation
 ```
+Each subdirectory contains its own `README.md` file detailing localized installation notes, scripts, and configuration guidelines.
+
+| Directory Path | Content Description |
+| :--- | :--- |
+| **`./client`** | Houses the frontend code, user interfaces, or Unity/MR headset application scripts that interact with the core backend service. |
+| **`./server`** | The central FastAPI web server wrapper responsible for managing session states, lifecycle endpoints, and request routing. |
+| **`./server/handler`** | Contains the core modular AI engines, including handlers for local Whisper (STT), Piper (TTS), FAISS vector search, and Ollama (LLM orchestration). |
+| **`./server/personas`** | Storage for identity profiles, containing `.txt` files that define behavioral guidelines and spatial context. |
+| **`./server/piper_voices`** | Holds the local `.onnx` voice models and metadata configurations used by the text-to-speech synthesis engine for rapid audio generation. |
 
 ## Installation Guide
 
@@ -101,11 +138,11 @@ python start_edi.py
 
 This Semester project was developed at ETH Zurich in cooperation with the [Global Health Engineering Lab (GHE)](https://ghe.ethz.ch/) and the [Media & Methods Lab (MML)](https://www.mediamethodslab.ethz.ch/).
 
-- Ella Haechler: Author & Maintainer
-- Elizabeth Tilley: Supervisor
-- Jakub Tkaczuk: Supervisor
-- Jeanine Reutemann: Supervisor
-- Daniel Borges: Supervisor & Technical Support
+* Ella Haechler: Author & Maintainer
+* Elizabeth Tilley: Supervisor
+* Jakub Tkaczuk: Supervisor
+* Jeanine Reutemann: Supervisor
+* Daniel Borges: Supervisor & Technical Support
 
 ## License
 
