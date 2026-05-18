@@ -17,7 +17,6 @@ Every persona file enforces three main rules:
 3. **Emotion & State Tagging:** Instructs the model to append emotional metadata tags (like `[happy]`, `[bored]`, `[thoughtful]` or `[curious]`) to its raw text replies. The server passes these tags to the client so that the frontend can trigger matching spatial animations.
 
 ### Creating or Editing a Persona
-## Modular Design
 Because the system is fully modular, **swapping a character or adapting EDI for a new laboratory context is incredibly easy**. 
 Since the technical guardrails and response formats are isolated in the `prompt_templates/` directory, you can completely change EDI’s entire identity, tone, and room context by simply uploading different text files in this `personas/` folder. The underlying AI engine, database connection, and voice processing loops remain entirely unchanged.
 
