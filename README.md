@@ -66,9 +66,9 @@ Each subdirectory contains its own `README.md` file detailing localized installa
 | :--- | :--- |
 | **`./client`** | Houses the frontend code, user interfaces, or Unity/MR headset application scripts that interact with the core backend service. |
 | **`./server`** | The central FastAPI web server wrapper responsible for managing session states, lifecycle endpoints, and request routing. |
-| **`./server/handler`** | Contains the core modular AI engines, including handlers for local Whisper (STT), Piper (TTS), FAISS vector search, and Ollama (LLM orchestration). |
 | **`./server/personas`** | Storage for identity profiles, containing `.txt` files that define behavioral guidelines and spatial context. |
 | **`./server/piper_voices`** | Holds the local `.onnx` voice models and metadata configurations used by the text-to-speech synthesis engine for rapid audio generation. |
+| **`./server/testing`** | Diagnostic scripts to verify speech and conversational modes offline. |
 
 ## Installation Guide
 
