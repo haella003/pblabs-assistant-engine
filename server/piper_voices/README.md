@@ -10,6 +10,6 @@ For every voice profile used by the system, this folder contains a matching pair
 ## Current Modes
 Piper supports a massive library of open-source voices across different qualities (`low`, `medium`, `high`). If you want to change EDI's voice profile:
 
-1. Download the preferred voice pair (`.onnx` and `.onnx.json`) from the official [Piper Voice Repository](https://github.com/rhasspy/piper) according to your operating system.
+1. Download the preferred voice pair (`.onnx` and `.onnx.json`) from the official [Piper Voice Repository](https://github.com/OHF-Voice/piper1-gpl) according to your operating system.
 2. Drop both files directly into this directory.
-3. Update the directory path and model file strings inside your `tts_handler.py` (or your central server configuration) to point to the new filenames.
+3. Update the directory path and model file strings inside your `speech_handler.py` (or your central server configuration) to point to the new filenames.
