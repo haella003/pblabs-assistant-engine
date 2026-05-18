@@ -1,11 +1,46 @@
-# EDI INSTALLTION KIT
+# Local LLM Assistant Engine
 
-## 0. Prerequisites
+
+## Project Overview
+XYZ
+
+## Directory Structure
+
+```text
+pblabs-mr-onboarding-core/
+├── client/
+│   └── api_test_client.py          # Script to verify raw FastAPI endpoint behaviors and JSON responses
+├── server/
+│   ├── handler/
+│   │   ├── audio_handler.py        # Speech-to-Text handler (Whisper)
+│   │   ├── knowledge_handler.py    # Vector database search layer (FAISS)
+│   │   ├── llm_handler.py          # Local LLM integration layer (Ollama)
+│   │   ├── logger_handler.py       # Centralized system logging
+│   │   └── speech_handler.py       # Text-to-Speech engine (Piper TTS)
+│   ├── knowledge_vault/            # Source documents, PDFs, and FAISS indices
+│   ├── personas/
+│   │   ├── EDI_bachelorthesis.txt  # Core personality profile definition
+│   │   ├── prompt_template.txt     # System structural composition framework
+│   │   └── system_rules.txt        # Behavioral constraints and emotion tag logic
+│   ├── piper_voices/               # Local voice model storage files (.onnx / .onnx.json) for TTS
+│   ├── testing/
+│   │   ├── test_edi_modes.py       # Client CLI logic simulator for text/voice testing
+│   │   └── test_voice.py           # Isolated test script specifically for checking the audio/voice pipeline
+│   └── main.py                     # Primary FastAPI entry point and lifecycle state engine
+├── venv/                           # Isolated local Python virtual environment
+├── LICENSE                         # MIT License documentation
+├── requirements.txt                # System Python dependencies
+└── README.md                       # Repository overview documentation
+```
+
+## Installation Guide
+
+0. Prerequisites
 Install these three things before running the code:
 1. **Ollama**: [Download here](https://ollama.com/). 
    - After installing, you **must** download the specific model used in this project by running this command in your terminal:
    ```bash
-   ollama pull gemma:4b
+   ollama pull gemma3:4b
 2. **FFmpeg**: 
    - Mac: `brew install ffmpeg`
    - Windows: `choco install ffmpeg`
@@ -15,9 +50,8 @@ Install these three things before running the code:
 
 ---
 
-## 1. Setup Instructions
+1. Setup Instructions
 
-### Environment & Dependencies
 ```bash
 # Create and activate virtual environment
 python -m venv venv
@@ -28,7 +62,7 @@ pip install -r requirements.txt
 ```
 ---
 
-### 2. Voice Models
+2. Voice Models
 
 Download en_US-amy-medium.onnx and en_US-amy-medium.onnx.json from HuggingFace.
 
@@ -36,7 +70,7 @@ Save them in: server/piper_voices/
 
 ---
 
-## 3. Configuration & Adjustments
+3. Configuration & Adjustments
 
 Before running the project, check these three items:
 
@@ -55,7 +89,7 @@ Ensure all libraries are installed correctly for your specific OS:
 ```bash
 pip install -r requirements.txt
 ```
-### 5. How To Run
+5. How To Run
 Start the Backend:
 
 ```bash
@@ -67,3 +101,29 @@ Start the Interface:
 python start_edi.py
 ```
 
+## Contributors
+
+This Semester project was developed at ETH Zurich in cooperation with the [Global Health Engineering Lab (GHE)](https://ghe.ethz.ch/) and the [Media & Methods Lab (MML) Projects](https://www.mediamethodslab.ethz.ch/projects).
+
+Author & Maintainer: * Ella Haechler — ORCID Profile
+
+Academic & Technical Supervision:
+
+Jakub Tkaczuk — Supervisor
+
+Elizabeth Tilley — Supervisor
+
+Jeanine Reutemann — Supervisor
+
+Daniel Borges — Supervisor & Technical Support
+
+## License
+
+This Project is licensed under the [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+## Thesis Context
+Date: Spring Semester 2026
+
+Location: Zürich, Switzerland
+
+Institution: ETH Zurich (Eidgenössische Technische Hochschule Zürich)
