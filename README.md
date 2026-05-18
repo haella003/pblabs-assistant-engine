@@ -103,23 +103,17 @@ python start_edi.py
 
 ## Contributors
 
-This Semester project was developed at ETH Zurich in cooperation with the [Global Health Engineering Lab (GHE)](https://ghe.ethz.ch/) and the [Media & Methods Lab (MML) Projects](https://www.mediamethodslab.ethz.ch/projects).
+This Semester project was developed at ETH Zurich in cooperation with the [Global Health Engineering Lab (GHE)](https://ghe.ethz.ch/) and the [Media & Methods Lab (MML)](https://www.mediamethodslab.ethz.ch/).
 
-Author & Maintainer: * Ella Haechler — ORCID Profile
-
-Academic & Technical Supervision:
-
-Jakub Tkaczuk — Supervisor
-
-Elizabeth Tilley — Supervisor
-
-Jeanine Reutemann — Supervisor
-
-Daniel Borges — Supervisor & Technical Support
+- Ella Haechler: Author & Maintainer
+- Elizabeth Tilley: Supervisor
+- Jakub Tkaczuk: Supervisor
+- Jeanine Reutemann: Supervisor
+- Daniel Borges: Supervisor & Technical Support
 
 ## License
 
-This Project is licensed under the [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+This Project is licensed under the [License: MIT](https://opensource.org/licenses/MIT).
 
 ## Thesis Context
 Date: Spring Semester 2026
