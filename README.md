@@ -113,7 +113,7 @@ This Semester project was developed at ETH Zurich in cooperation with the [Globa
 
 ## License
 
-This Project is licensed under the [License: MIT](https://opensource.org/licenses/MIT).
+This Project is licensed under the [MIT License](https://opensource.org/licenses/MIT).
 
 ## Thesis Context
 Date: Spring Semester 2026
