@@ -11,8 +11,6 @@ load_dotenv()
 MODEL_NAME = "gemma3:4b"
 OLLAMA_GENERATE_URL = "http://localhost:11434/api/generate"
 
-PERSONA_PATH = "server/personas/EDI_RZ_1.txt"
-
 client = OpenAI(
     base_url="http://localhost:11434/v1",  
     api_key="ollama",                     
@@ -92,10 +90,11 @@ def get_relevant_knowledge(user_input):
     
     if found_keywords:
         #print(f"Combined JSON matches: {', '.join(found_keywords)}")
+        pass
             
     # Add default info at the end
-        default_info = knowledge_base.get("default", {}).get("info", "")
-        combined_info = f"GENERAL LAB RULES: {default_info}\n\n" + combined_info
+    default_info = knowledge_base.get("default", {}).get("info", "")
+    combined_info = f"GENERAL LAB RULES: {default_info}\n\n" + combined_info
     
     # Add PDF content
     pdf_info = get_pdf_content()
@@ -104,27 +103,50 @@ def get_relevant_knowledge(user_input):
         
     return combined_info
         
-# persona loading
-def load_persona(filename=PERSONA_PATH):
-    path = os.path.join("server/personas", filename)
-    if not os.path.exists(path):
-        return "You are a helpful assistant."
-    with open(path, "r", encoding="utf-8") as f:
-        return f.read()
-    
 # main response logic
 def get_edi_response(user_input):
     global chat_history 
     
+    # 1. Fetch data from knowledge base
     current_package = get_relevant_knowledge(user_input)
-    base_instructions = load_persona(PERSONA_PATH)
     
-    system_prompt = f"""
-    {base_instructions}
+    # 2. Dynamically load all text files in the personas folder
+    personas_dir = "server/personas"
+    persona_content = ""
+    system_rules = ""
+    prompt_blueprint = ""
     
-    CURRENT CONTEXT/KNOWLEDGE:
-    {current_package}"""
+    try:
+        for filename in os.listdir(personas_dir):
+            if filename.endswith(".txt"):
+                file_path = os.path.join(personas_dir, filename)
+                with open(file_path, "r", encoding="utf-8") as f:
+                    content = f.read()
+                
+                # Automatically sort content based on what the file is named
+                if filename == "prompt_template.txt":
+                    prompt_blueprint = content
+                elif filename == "system_rules.txt":
+                    system_rules = content
+                else:
+                    # Treat ANY other text file you drop in here as a persona!
+                    persona_content += f"\n{content}"
+    except Exception as e:
+        print(f"Error loading prompt files dynamically: {e}")
+
+    # 3. Stitch everything into the blueprint placeholders
+    if prompt_blueprint:
+        system_prompt = (
+            prompt_blueprint
+            .replace("{{persona}}", persona_content.strip())
+            .replace("{{system_rules}}", system_rules)
+            .replace("{{retrieved_context}}", current_package)
+        )
+    else:
+        # Fallback if prompt_template.txt is missing or renamed
+        system_prompt = f"{persona_content}\n\nSYSTEM RULES:\n{system_rules}\n\nCONTEXT:\n{current_package}"
     
+    # 4. Append history and send to LLM
     chat_history.append({"role": "user", "content": user_input})
     
     if len(chat_history) > 10:
@@ -138,7 +160,25 @@ def get_edi_response(user_input):
             messages=messages_to_send
         )
         
-        response_text = completion.choices[0].message.content
+        # --- BULLETPROOF TEXT EXTRACTION ---
+        try:
+            # 1. Try standard OpenAI Object attribute access
+            response_text = completion.choices[0].message.content
+        except (AttributeError, TypeError):
+            try:
+                # 2. Try dict-style access if it was parsed as a pure dictionary
+                response_text = completion.choices["message"]["content"]
+            except Exception:
+                # 3. Last resort: Convert the choice object to a string/dict structure
+                # This handles complex legacy API edge cases
+                choice_data = dict(completion.choices)
+                if "message" in choice_data:
+                    msg = choice_data["message"]
+                    response_text = msg.get("content") if hasattr(msg, "get") else msg.content
+                else:
+                    raise Exception("Could not parse completion object payload structure.")
+        # -------------------------------------
+        
         chat_history.append({"role": "assistant", "content": response_text})
         
         print(completion)

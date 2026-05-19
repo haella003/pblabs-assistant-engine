@@ -1,19 +1,19 @@
 <|SYSTEM_RULES|>
-{system_rules}
+{{system_rules}}
 
 <|PERSONALITY_PROFILE|>
-{persona_content}
+{{persona}}
 
 <|KNOWLEDGE_VAULT_CONTEXT|>
-{knowledge_context}
+{{retrieved_context}}
 
 <|CONVERSATION_HISTORY|>
 {chat_history}
 
 <|INSTRUCTION|>
-Use the Conversation History above to understand what "it", "that", or "her" refers to. 
+Use the Conversation History above to understand what the user refers to. 
 Answer the User Input based ONLY on the Knowledge Vault Context. 
-If the info is missing, say you don't know—don't guess!
+If the info is missing, say you don't know and don't guess!
 
 <|USER_INPUT|>
 {user_text}

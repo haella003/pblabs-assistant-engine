@@ -27,8 +27,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# At the top of main.py
-PERSONA_PATH = os.path.join("server", "personas", "EDI_Bachelorthesis.txt")
+# Configuration path for knowledge vector indexing
 KNOWLEDGE_PATH = os.path.join("server", "knowledge_vault")
 
 # Added status tracking for the client to poll
@@ -117,7 +116,7 @@ async def chat_with_audio(request: AudioChatRequest):
     temp_input = "logs/last_user_voice.wav"
     os.makedirs("logs", exist_ok=True)
 
-    # --- 1. NEW LOGIC: CHOOSE BETWEEN TEXT OR AUDIO ---
+    # --- 1. ROUTE INPUT: TEXT OR AUDIO ---
     if request.text_query:
         # User typed their question
         user_text = request.text_query
@@ -146,36 +145,12 @@ async def chat_with_audio(request: AudioChatRequest):
         
     # --- 2. FORMULATE LLM RESPONSE ---
     session_state["status"] = "thinking"
-    
-    # Load all your new external files
+   
+    # It will automatically fetch the persona, system rules, template, and context files.
     try:
-        with open(os.path.join("server", "personas", "system_rules.txt"), "r") as f:
-            system_rules = f.read()
-        with open(PERSONA_PATH, "r") as f:
-            persona_content = f.read()
-        with open("server/prompt_template.txt", "r") as f:
-            template = f.read()
+        raw_response = await asyncio.to_thread(llm_handler.get_edi_response, user_text)
     except Exception as e:
-        return {"error": f"Missing template or rule files: {e}"}
-
-    # Context from FAISS
-    knowledge_context = knowledge_handler.get_relevant_context(user_text, k=3)
-
-    # Memory logic
-    if "chat_history" not in session_state: session_state["chat_history"] = []
-    history_lines = session_state.get("chat_history", [])[-5:]
-    chat_history = "\n".join([f"User: {c['u']}\nEDI: {c['e']}" for c in history_lines])
-
-    full_prompt = template.format(
-        system_rules=system_rules,
-        persona_content=persona_content,
-        knowledge_context=knowledge_context,
-        chat_history=chat_history,
-        user_text=user_text
-    )
-
-    # Send to LLM
-    raw_response = await asyncio.to_thread(llm_handler.get_edi_response, full_prompt)
+        return {"error": f"LLM generation failed: {e}"}
     
     # Parse Emotion and Message
     if "|" in raw_response:
@@ -185,9 +160,7 @@ async def chat_with_audio(request: AudioChatRequest):
     else:
         emotion, message = "NEUTRAL", raw_response
 
-    # --- 3. SAVE TO MEMORY ---
-    # We save the current exchange so EDI remembers it next time
-    session_state["chat_history"].append({"u": user_text, "e": message})
+    # --- 3. SAVE STATE & SYSTEM LOGS ---
     session_state["current_emotion"] = emotion
     await asyncio.to_thread(save_chat_log, "EDI", message, emotion, session_id)
 
@@ -208,6 +181,4 @@ async def chat_with_audio(request: AudioChatRequest):
     }
 
 if __name__ == "__main__":
-    # Remove the string "main:app" and the reload=True (direct objects don't support reload)
-    # change host an port accordingly
-    uvicorn.run(app, host="127.0.0.1", port=8080) 
+    uvicorn.run(app, host="127.0.0.1", port=8080)
