@@ -4,6 +4,7 @@ import requests
 from openai import OpenAI
 from dotenv import load_dotenv
 import PyPDF2
+from handler import knowledge_handler
 
 load_dotenv() 
 
@@ -46,19 +47,22 @@ def unload_model():
 
 # knowledge base
 def get_pdf_content():
-    """Reads all text from any PDF files in the knowledge_vault folder."""
+    """Reads ALL text from any PDF files in the server/knowledge_vault folder."""
     pdf_text = ""
-    vault_path = "knowledge_vault"
+    # FIXED: Point to the correct folder location
+    vault_path = os.path.join("server", "knowledge_vault")
     
     if not os.path.exists(vault_path):
+        print(f"Warning: Vault path not found at {vault_path}")
         return ""
 
     for filename in os.listdir(vault_path):
         if filename.endswith(".pdf"):
+            print(f"Reading file from Knowledge Vault: {filename}")
             try:
                 with open(os.path.join(vault_path, filename), "rb") as f:
                     reader = PyPDF2.PdfReader(f)
-                    for page in reader.pages:
+                    for page_num, page in enumerate(reader.pages):
                         content = page.extract_text()
                         if content:
                             pdf_text += content + "\n"
@@ -70,36 +74,35 @@ def get_relevant_knowledge(user_input):
     text = user_input.lower()
     combined_info = ""
     
-    # Load the JSON
-    json_path = os.path.join("knowledge_vault", "knowledge.json")
+    # 1. Load the JSON for hardcoded keyword rules
+    json_path = os.path.join("server", "knowledge_vault", "knowledge.json")
     try:
         with open(json_path, "r") as file:
             knowledge_base = json.load(file)
     except FileNotFoundError:
-        return "No specific lab knowledge found."
+        knowledge_base = {}
 
-    # Check for keyword matches in the JSON and combine relevant info
-    found_keywords = []
     for category_name, package_data in knowledge_base.items():
         if category_name == "default":
             continue
-        for keyword in package_data["keywords"]:
+        for keyword in package_data.get("keywords", []):
             if keyword in text:
-                found_keywords.append(category_name)
                 combined_info += f"FACT ({category_name}): {package_data['info']}\n"
-    
-    if found_keywords:
-        #print(f"Combined JSON matches: {', '.join(found_keywords)}")
-        pass
             
-    # Add default info at the end
+    # Add default lab info
     default_info = knowledge_base.get("default", {}).get("info", "")
     combined_info = f"GENERAL LAB RULES: {default_info}\n\n" + combined_info
     
-    # Add PDF content
-    pdf_info = get_pdf_content()
-    if pdf_info:
-        combined_info += f"\nTECHNICAL MANUAL DETAILS:\n{pdf_info[:2000]}" 
+    # 2. THE FAISS FIX: Ask the vector store to scan all 54 pages 
+    # and return the top 4 most contextually relevant chunks matching the user's input!
+    try:
+        print(f"FAISS: Scanning 54-page index for matching context...")
+        # k=4 pulls the 4 best matching paragraphs from anywhere in your document
+        pdf_context = knowledge_handler.get_relevant_context(user_input, k=4)
+        if pdf_context:
+            combined_info += f"\nRETRIEVED THESIS & MANUAL CONTEXT:\n{pdf_context}"
+    except Exception as e:
+        print(f"Error retrieving context from FAISS: {e}")
         
     return combined_info
         
