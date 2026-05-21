@@ -32,6 +32,7 @@ This repository is a first version and forms the basic technical framework. Whil
 * **The Full Spatial Ecosystem:** The ultimate milestone is the seamless fusion of all development layers—unifying this Python backend engine with the Unreal Engine frontend client to synchronize live state events (`idle`, `transcribing`, `thinking`) directly with real-time spatial animations, particle effects, and character model triggers.
 * **Unified Setup Installer:** Replacing manual command-line dependency setups with a compiled, single-click installer or Dockerized architecture to automate the configuration of local Ollama, Whisper, and Piper paths, lowering the barrier to entry for other research labs.
 
+---
 ## Directory Structure
 
 ```text
@@ -70,70 +71,57 @@ Each subdirectory contains its own `README.md` file detailing localized installa
 | **`./server/piper_voices`** | Holds the local `.onnx` voice models and metadata configurations used by the text-to-speech synthesis engine for rapid audio generation. |
 | **`./server/testing`** | Diagnostic scripts to verify speech and conversational modes offline. |
 
+---
 ## Installation Guide
+Follow these steps to set up your local development environment and get the Backend running.
 
-### 0. Prerequisites
+### Prerequisites
 Install these three things before running the code:
-1. **Ollama**: [Download here](https://ollama.com/). 
-   - After installing, you **must** download the specific model used in this project by running this command in your terminal:
-   ```bash
-   ollama pull gemma3:4b
-2. **FFmpeg**: 
-   - Mac: `brew install ffmpeg`
-   - Windows: `choco install ffmpeg`
-3. **Python 3.10+**
-   In your python code, it should look like this:
-   response = ollama.chat(model='gemma4:4b', messages=[...])
-
-### 1. Setup Instructions
-
+* **Python 3.9+**: Your local environment is verified on Python 3.9
+* **Ollama**: For running local LLMs. [Download here](https://ollama.com/) 
+* **Git**: Required to clone the repository code from GitHub and manage version control changes easily
+  
+### Setup Instructions
+#### 1. Clone the Repository
 ```bash
-# Create and activate virtual environment
-python -m venv venv
-source venv/bin/activate  # Windows: .\venv\Scripts\activate
-
-# Install universal libraries
-pip install -r requirements.txt
+git clone https://github.com/haella003/pblabs-assistant-engine.git
+cd pblabs-assistant-engine
 ```
 
-### 2. Voice Models
-
-Download en_US-amy-medium.onnx and en_US-amy-medium.onnx.json from HuggingFace.
-
-Save them in: server/piper_voices/
-
-### 3. Configuration & Adjustments
-
-Before running the project, check these three items:
-
-#### a. Network Settings (for VR Users)
-If you are running the backend on a PC and the client on a separate VR headset:
-- Open `server/api_main.py`.
-- Change the host from `127.0.0.1` to your PC's actual IP address (e.g., `192.168.1.XX`).
-
-#### b. Character Persona
-To change EDI's personality or knowledge base:
-- Navigate to the `server/personas/` folder.
-- Adjust the `.json` or `.txt` persona file to match your project's requirements.
-
-#### c. Requirements
-Ensure all libraries are installed correctly for your specific OS:
+#### 2. Start the Dependency Model Management
 ```bash
-pip install -r requirements.txt
+ollama pull gemma3:4b
 ```
 
-### 5. How To Run
-Start the Backend:
+#### 3. Adjustments
+The system is designed to be modular. Before running, adjust settings, network profiles, and AI behaviors by modifying specific configuration surfaces:
+##### 3.1. Network Settings & IP Addresses
+   By default, the server runs on your local machine (127.0.0.1:8080).
+   If you are connecting an external device (like a standalone VR/MR headset or a separate Unreal Engine machine over a local Wi-Fi network), you must bind the server to your computer's local      IP address:
+   - Open `server/main.py`.
+   - Scroll to the very bottom file execution line: uvicorn.run(app, host="127.0.0.1", port=8080).
+   - Change "127.0.0.1" to your local network IP (e.g., "192.168.1.50") or use "0.0.0.0" to listen on all active network interfaces.
+##### 3.2. Swapping Persona Files
+   It is possible to change the complete background identity or role-play parameters without altering code:
+   - Navigate to the `server/personas/` directory and adjust if wanted
+   - Modify the content inside `server/knowledge_vault`, or drop in a completely new `.txt` or `.pdf` profile. The backend automatically parses any extra text file.
 
+#### 4. Running the System
+##### 4.1 Start the FastAPI Server
 ```bash
-python server/api_main.py
+python3 server/main.py
 ```
-Start the Interface:
 
+##### 4.2 Verify and Test the System
+To ensure everything is working before connecting the Unreal Engine frontend, keep your server running in Terminal Window 1. Open a new Terminal Window 2, navigate to the project directory, activate the environment `source venv/bin/activate`, and run the local testing suite:
 ```bash
-python start_edi.py
+python3 server/testing/test_edi_modes.py
 ```
 
+#### 5. Setup Unreal Engine
+XXX
+
+---
 ## Contributors
 
 This Semester project was developed at ETH Zurich in cooperation with the [Global Health Engineering Lab (GHE)](https://ghe.ethz.ch/) and the [Media & Methods Lab (MML)](https://www.mediamethodslab.ethz.ch/).
@@ -153,4 +141,4 @@ Date: Spring Semester 2026
 
 Location: Zürich, Switzerland
 
-Institution: ETH Zurich (Eidgenössische Technische Hochschule Zürich)
+Institution: ETH Zurich, Switzerland
