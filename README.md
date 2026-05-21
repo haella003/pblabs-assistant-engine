@@ -88,37 +88,37 @@ git clone https://github.com/haella003/pblabs-assistant-engine.git
 cd pblabs-assistant-engine
 ```
 
-#### 5. Start the Dependency Model Management
+#### 2. Start the Dependency Model Management
 ```bash
 ollama pull gemma3:4b
 ```
 
-#### 6. Adjustments
+#### 3. Adjustments
 The system is designed to be modular. Before running, adjust settings, network profiles, and AI behaviors by modifying specific configuration surfaces:
-##### 6.1. Network Settings & IP Addresses
+##### 3.1. Network Settings & IP Addresses
    By default, the server runs on your local machine (127.0.0.1:8080).
    If you are connecting an external device (like a standalone VR/MR headset or a separate Unreal Engine machine over a local Wi-Fi network), you must bind the server to your computer's local      IP address:
    - Open `server/main.py`.
    - Scroll to the very bottom file execution line: uvicorn.run(app, host="127.0.0.1", port=8080).
    - Change "127.0.0.1" to your local network IP (e.g., "192.168.1.50") or use "0.0.0.0" to listen on all active network interfaces.
-##### 6.2. Swapping Persona Files
+##### 3.2. Swapping Persona Files
    It is possible to change the complete background identity or role-play parameters without altering code:
    - Navigate to the `server/personas/` directory and adjust if wanted
    - Modify the content inside `server/knowledge_vault`, or drop in a completely new `.txt` or `.pdf` profile. The backend automatically parses any extra text file.
 
-#### 7. Running the System
-##### 7.1 Start the FastAPI Server
+#### 4. Running the System
+##### 4.1 Start the FastAPI Server
 ```bash
 python3 server/main.py
 ```
 
-##### 7.2 Verify and Test the System
+##### 4.2 Verify and Test the System
 To ensure everything is working before connecting the Unreal Engine frontend, keep your server running in Terminal Window 1. Open a new Terminal Window 2, navigate to the project directory, activate the environment `source venv/bin/activate`, and run the local testing suite:
 ```bash
 python3 server/testing/test_edi_modes.py
 ```
 
-#### 8. Setup Unreal Engine
+#### 5. Setup Unreal Engine
 XXX
 
 ---
