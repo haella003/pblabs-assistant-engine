@@ -52,7 +52,7 @@ pblabs-mr-onboarding-core/
 │   │   ├── prompt_template.txt     # System structural composition framework
 │   │   └── system_rules.txt        # Behavioral constraints and emotion tag logic
 │   ├── piper_voices/               # Local voice model storage files (.onnx / .onnx.json) for TTS
-│   ├── testing/
+│   ├── tests/
 │   │   ├── test_edi_modes.py       # Client CLI logic simulator for text/voice testing
 │   │   └── test_voice.py           # Isolated test script specifically for checking the audio/voice pipeline
 │   └── main.py                     # Primary FastAPI entry point and lifecycle state engine
