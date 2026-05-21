@@ -37,6 +37,8 @@ This repository is a first version and forms the basic technical framework. Whil
 
 ```text
 pblabs-mr-onboarding-core/
+├── .github/
+│   └── ci.yml                      # Automated GitHub Actions Continuous Integration pipeline
 ├── client/
 │   └── api_test_client.py          # Script to verify raw FastAPI endpoint behaviors and JSON responses
 ├── server/
@@ -48,11 +50,12 @@ pblabs-mr-onboarding-core/
 │   │   └── speech_handler.py       # Text-to-Speech engine (Piper TTS)
 │   ├── knowledge_vault/            # Source documents, PDFs, and FAISS indices
 │   ├── personas/
-│   │   ├── EDI_bachelorthesis.txt  # Core personality profile definition
+│   │   ├── EDI_profile.txt         # Core personality profile definition
 │   │   ├── prompt_template.txt     # System structural composition framework
 │   │   └── system_rules.txt        # Behavioral constraints and emotion tag logic
 │   ├── piper_voices/               # Local voice model storage files (.onnx / .onnx.json) for TTS
 │   ├── tests/
+│   │   ├── test_backend.py         # Automated structural unit test suite (executed by cloud CI)
 │   │   ├── test_edi_modes.py       # Client CLI logic simulator for text/voice testing
 │   │   └── test_voice.py           # Isolated test script specifically for checking the audio/voice pipeline
 │   └── main.py                     # Primary FastAPI entry point and lifecycle state engine
@@ -69,7 +72,7 @@ Each subdirectory contains its own `README.md` file detailing localized installa
 | **`./server`** | The central FastAPI web server wrapper responsible for managing session states, lifecycle endpoints, and request routing. |
 | **`./server/personas`** | Storage for identity profiles, containing `.txt` files that define behavioral guidelines and spatial context. |
 | **`./server/piper_voices`** | Holds the local `.onnx` voice models and metadata configurations used by the text-to-speech synthesis engine for rapid audio generation. |
-| **`./server/testing`** | Diagnostic scripts to verify speech and conversational modes offline. |
+| **`./server/tests`** | Diagnostic scripts to verify speech and conversational modes offline. |
 
 ---
 ## Installation Guide
@@ -115,7 +118,7 @@ python3 server/main.py
 ##### 4.2 Verify and Test the System
 To ensure everything is working before connecting the Unreal Engine frontend, keep your server running in Terminal Window 1. Open a new Terminal Window 2, navigate to the project directory, activate the environment `source venv/bin/activate`, and run the local testing suite:
 ```bash
-python3 server/testing/test_edi_modes.py
+python3 server/tests/test_edi_modes.py
 ```
 
 #### 5. Setup Unreal Engine
