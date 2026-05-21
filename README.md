@@ -88,28 +88,6 @@ git clone https://github.com/haella003/pblabs-assistant-engine.git
 cd pblabs-assistant-engine
 ```
 
-#### 2. Set Up a Virtual Environment
-```bash
-# Create and activate virtual environment
-python -m venv venv
-source venv/bin/activate  # Windows: .\venv\Scripts\activate
-```
-
-#### 3. Install Dependencies
-```bash
-pip install --upgrade pip
-pip install -r requirements.txt
-```
-
-#### 4. Configurate Local Environment Variables
-##### 4.1. In the root directory of the project, create a file named `.env.`
-##### 4.2. Open the file and add your configuration variables (adjusting values to match your specific setup if necessary):
-```
-OLLAMA_BASE_URL="http://localhost:11434"
-SERVER_PORT=8080
-# Add any additional TTS or Whisper specific variables here if required
-```
-
 #### 5. Start the Dependency Model Management
 ```bash
 ollama pull gemma3:4b
@@ -125,9 +103,8 @@ The system is designed to be modular. Before running, adjust settings, network p
    - Change "127.0.0.1" to your local network IP (e.g., "192.168.1.50") or use "0.0.0.0" to listen on all active network interfaces.
 ##### 6.2. Swapping Persona Files
    It is possible to change the complete background identity or role-play parameters without altering code:
-   - Navigate to the `.server/personas/` directory.
-   - Leave `prompt_template.txt` and `system_rules.txt` alone, as they control systemic structure.
-   - Modify the content inside `.server/knowledge_vault`, or drop in a completely new `.txt` or `.pdf` profile. The backend automatically parses any extra text file.
+   - Navigate to the `server/personas/` directory and adjust if wanted
+   - Modify the content inside `server/knowledge_vault`, or drop in a completely new `.txt` or `.pdf` profile. The backend automatically parses any extra text file.
 
 #### 7. Running the System
 ##### 7.1 Start the FastAPI Server
