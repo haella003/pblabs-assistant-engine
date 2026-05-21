@@ -98,13 +98,16 @@ ollama pull gemma3:4b
 
 #### 3. Adjustments
 The system is designed to be modular. Before running, adjust settings, network profiles, and AI behaviors by modifying specific configuration surfaces:
-##### 3.1. Network Settings & IP Addresses
+##### 3.1 Network Settings & IP Addresses
    By default, the server runs on your local machine (127.0.0.1:8080).
    If you are connecting an external device (like a standalone VR/MR headset or a separate Unreal Engine machine over a local Wi-Fi network), you must bind the server to your computer's local      IP address:
    - Open `server/main.py`.
    - Scroll to the very bottom file execution line: uvicorn.run(app, host="127.0.0.1", port=8080).
    - Change "127.0.0.1" to your local network IP (e.g., "192.168.1.50") or use "0.0.0.0" to listen on all active network interfaces.
-##### 3.2. Swapping Persona Files
+##### 3.2 Accessing Local API
+   Use this if you want to manually trigger the LLM, Whisper, and Piper TTS endpoints directly from your browser.:
+   - **Interactive Swagger UI:** [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+##### 3.3 Swapping Persona Files
    It is possible to change the complete background identity or role-play parameters without altering code:
    - Navigate to the `server/personas/` directory and adjust if wanted
    - Modify the content inside `server/knowledge_vault`, or drop in a completely new `.txt` or `.pdf` profile. The backend automatically parses any extra text file.
