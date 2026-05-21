@@ -3,8 +3,6 @@ from faster_whisper import WhisperModel
 import gc
 import io
 
-# EARS
-
 whisper_model = None
 
 def load_model():

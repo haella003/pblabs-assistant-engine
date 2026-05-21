@@ -24,13 +24,13 @@ def record_audio(duration=5, fs=44100):
         return False
 
 def send_chat_audio():
-    print("⏳ Processing...")
+    print("Processing...")
     try:
         # Convert audio to base64
         with open(TEMP_WAV, "rb") as f:
             audio_base64 = base64.b64encode(f.read()).decode('utf-8')
         
-        # DELETE client WAV immediately after reading into memory
+        # delete client WAV immediately after reading into memory
         if os.path.exists(TEMP_WAV):
             os.remove(TEMP_WAV)
 
@@ -56,7 +56,7 @@ def send_chat_audio():
             os.remove(TEMP_WAV)
 
 def main():
-    print("=== EDI VOICE-TO-TEXT CLIENT ===")
+    print("--- EDI VOICE-TO-TEXT CLIENT ---")
     
     # Start session
     try:

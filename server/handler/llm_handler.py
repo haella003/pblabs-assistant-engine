@@ -26,7 +26,7 @@ def preload_model():
         # 1. Keep it in memory so it doesn't unload automatically
         requests.post(OLLAMA_GENERATE_URL, json={"model": MODEL_NAME, "keep_alive": "1h"})
         
-        # 2. Fire a tiny dummy request to fully initialize the context/KV cache
+        # 2. Fire a tiny dummy request to fully initialize the context
         client.chat.completions.create(
             model=MODEL_NAME,
             messages=[{"role": "user", "content": "Warming up context window."}],
@@ -93,8 +93,8 @@ def get_relevant_knowledge(user_input):
     default_info = knowledge_base.get("default", {}).get("info", "")
     combined_info = f"GENERAL LAB RULES: {default_info}\n\n" + combined_info
     
-    # 2. THE FAISS FIX: Ask the vector store to scan all 54 pages 
-    # and return the top 4 most contextually relevant chunks matching the user's input!
+    # 2. THE FAISS FIX: Ask the vector store to scan all pages 
+    # and return the top 4 most contextually relevant chunks matching the user's input
     try:
         print(f"FAISS: Scanning 54-page index for matching context...")
         # k=4 pulls the 4 best matching paragraphs from anywhere in your document
@@ -132,7 +132,7 @@ def get_edi_response(user_input):
                 elif filename == "system_rules.txt":
                     system_rules = content
                 else:
-                    # Treat ANY other text file you drop in here as a persona!
+                    # Treat any other text file you drop in here as a persona
                     persona_content += f"\n{content}"
     except Exception as e:
         print(f"Error loading prompt files dynamically: {e}")
@@ -163,7 +163,7 @@ def get_edi_response(user_input):
             messages=messages_to_send
         )
         
-        # --- BULLETPROOF TEXT EXTRACTION ---
+        # TEXT EXTRACTION 
         try:
             # 1. Try standard OpenAI Object attribute access
             response_text = completion.choices[0].message.content
@@ -180,7 +180,6 @@ def get_edi_response(user_input):
                     response_text = msg.get("content") if hasattr(msg, "get") else msg.content
                 else:
                     raise Exception("Could not parse completion object payload structure.")
-        # -------------------------------------
         
         chat_history.append({"role": "assistant", "content": response_text})
         

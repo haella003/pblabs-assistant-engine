@@ -7,7 +7,6 @@ import sys
 import gc
 from pathlib import Path
 
-
 # --- PORTABLE PATH LOGIC ---
 HANDLER_DIR = Path(__file__).resolve().parent
 BASE_DIR = HANDLER_DIR.parent.parent

@@ -30,7 +30,7 @@ def play_audio(audio_bytes):
     # Wrap bytes in a buffer so soundfile can read it like a file
     data, fs = sf.read(io.BytesIO(audio_bytes))
     sd.play(data, fs)
-    sd.wait() # Wait until finished playing
+    sd.wait()
 
 def main():
     print("--- EDI TESTER ---")
@@ -57,7 +57,7 @@ def main():
 
         payload = {
             "audio_data": audio_b64, # Empty if text mode
-            "text_query": text_query, # New field!
+            "text_query": text_query, # Empty if voice mode
             "generate_audio": use_voice
         }
 
