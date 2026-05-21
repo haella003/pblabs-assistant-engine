@@ -6,7 +6,7 @@ This directory houses the core backend intelligence engine for EDI. Built with *
 * **`./personas`**: Character system prompts (`EDI_bachelorthesis.txt`, `EDI_RZ_1.txt`) that give EDI its distinct personality and room knowledge.
 * **`./piper_voices`**: Storage for local `.onnx` voice profiles used to quickly generate speech audio.
 * **`./prompt_templates`**: Formatting rules, system constraints, and emotion tag guidelines for the LLM.
-* **`./testing`**: Includes to test scripts (`test_edi_modes.py`, `test_voice.py`) to verify speech and conversational modes offline.
+* **`./tests`**: Includes to test scripts (`test_edi_modes.py`, `test_voice.py`) to verify speech and conversational modes offline.
 * **`main.py`**: The main entry point. It boots up the FastAPI application and tracks lifecycle states.
 
 ## Current Modes

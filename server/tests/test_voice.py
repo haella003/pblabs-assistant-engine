@@ -6,7 +6,7 @@ import os
 # --- CONFIGURATION ---
 PIPER_EXE = "venv/bin/piper"
 MODEL_PATH = "server/piper_voices/en_US-amy-medium.onnx"
-OUTPUT_WAV = "server/testing/test_voice_output.wav"
+OUTPUT_WAV = "server/tests/test_voice_output.wav"
 
 def test_voice():
     test_text = "This is a direct test of the Piper voice engine."
