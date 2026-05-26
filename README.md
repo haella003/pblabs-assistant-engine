@@ -85,15 +85,24 @@ Install these three things before running the code:
 * **Git**: Required to clone the repository code from GitHub and manage version control changes easily
   
 ### Setup Instructions
-#### 1. Clone the Repository
+#### 0. Clone the Repository
 ```bash
 git clone https://github.com/haella003/pblabs-assistant-engine.git
 cd pblabs-assistant-engine
 ```
 
+#### 1. Environment Setup
+```bash
+# Make the script executable
+chmod +x setup.sh
+
+# Run the setup script
+./setup.sh
+```
+
 #### 2. Start the Dependency Model Management
 ```bash
-ollama pull gemma3:4b
+ollama pull gemma4:e4b
 ```
 
 #### 3. Adjustments
@@ -106,11 +115,13 @@ The system is designed to be modular. Before running, adjust settings, network p
    - Change "127.0.0.1" to your local network IP or use "0.0.0.0" to listen on all active network interfaces.
 ##### 3.2 Accessing Local API
    Use this if you want to manually trigger the LLM, Whisper, and Piper TTS endpoints directly from your browser.:
-   - **Interactive Swagger UI:** [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+   - **Interactive Swagger UI:** [http://127.0.0.1:8000/docs](http://127.0.0.1:8080/docs)
 ##### 3.3 Swapping Persona Files
    It is possible to change the complete background identity or role-play parameters without altering code:
    - Navigate to the `server/personas/` directory and adjust if wanted
    - Modify the content inside `server/knowledge_vault`, or drop in a completely new `.txt` or `.pdf` profile. The backend automatically parses any extra text file.
+##### 3.4 Model Tuning & Optimization
+   To improve response quality and ensure the AI can handle long-form conversations (high memory), you can adjust the context length manually under: Ollama > Settings > Context Length.
 
 #### 4. Running the System
 ##### 4.1 Start the FastAPI Server
