@@ -94,6 +94,7 @@ cd pblabs-assistant-engine
 ```
 
 #### 1. Environment Setup
+OPTION A: macOS/Linux
 ```bash
 # Make the script executable
 chmod +x setup.sh
@@ -101,6 +102,7 @@ chmod +x setup.sh
 # Run the setup script
 ./setup.sh
 ```
+OPTION B: Windows
 
 #### 2. Start the Dependency Model Management
 ```bash
