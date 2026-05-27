@@ -64,7 +64,8 @@ pblabs-mr-onboarding-core/
 ├── LICENSE                         # MIT License documentation
 ├── README.md                       # Repository overview documentation
 ├── requirements.txt                # System Python dependencies
-└── setup.sh                        # environment setup and dependency installer
+├── setup.bat                       # environment setup and dependency installer for Windows
+└── setup.sh                        # environment setup and dependency installer for macOS/Linux
 ```
 Each subdirectory contains its own `README.md` file detailing localized installation notes, scripts, and configuration guidelines.
 
@@ -145,7 +146,7 @@ python3 server/tests/test_edi_modes.py
 
 #### 5. Frontend
 ##### 5.1 Setup Unreal Engine
-The Unreal Engine client acts as the visual and auditory interface.
+The Unreal Engine client acts as the visual and auditory interface. This first version v1.0.0 is only applicable for Windows. 
 - Download the Client: Navigate to the Releases section of this repository and download the latest .zip file
 - Extract & Launch: Unzip the folder to your local drive and run the PBLabsMR.exe
 - Configure Connection: Upon launching, locate the Server URL or Localhost ID field (Default: http://127.0.0.1:8080)
