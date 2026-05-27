@@ -117,7 +117,7 @@ ollama pull gemma4:e4b
 #### 3. Adjustments
 The system is designed to be modular. Before running, adjust settings, network profiles, and AI behaviors by modifying specific configuration surfaces:
 ##### 3.1 Network Settings & IP Addresses
-   By default, the server runs on your local machine (127.0.0.1:8080).
+   By default, the server runs on your local machine.
    If you are connecting an external device (like a standalone VR/MR headset or a separate Unreal Engine machine over a local Wi-Fi network), you must bind the server to your computer's local      IP address:
    - Open `server/main.py`.
    - Scroll to the very bottom file execution line: uvicorn.run(app, host="127.0.0.1", port=8080).
@@ -132,16 +132,16 @@ The system is designed to be modular. Before running, adjust settings, network p
 ##### 3.4 Model Tuning & Optimization
    To improve response quality and ensure the AI can handle long-form conversations (high memory), you can adjust the context length manually under: Ollama > Settings > Context Length.
 
-#### 4. Running the System
-##### 4.1 Start the FastAPI Server
+#### 4. Start the Engine
+##### Option A: macOS / Linux
+Double-click or run
 ```bash
-python3 server/main.py
+./start.sh
 ```
-
-##### 4.2 Verify and Test the System
-To ensure everything is working before connecting the Unreal Engine frontend, keep your server running in Terminal Window 1. Open a new Terminal Window 2, navigate to the project directory, activate the environment `source venv/bin/activate`, and run the local testing suite:
+##### Option B: Windows
+Double-click or run
 ```bash
-python3 server/tests/test_edi_modes.py
+start.bat
 ```
 
 #### 5. Frontend
