@@ -123,7 +123,7 @@ The system is designed to be modular. Before running, adjust settings, network p
    - Change "127.0.0.1" to your local network IP or use "0.0.0.0" to listen on all active network interfaces.
 ##### 3.2 Accessing Local API
    Use this if you want to manually trigger the LLM, Whisper, and Piper TTS endpoints directly from your browser.:
-   - **Interactive Swagger UI:** [http://127.0.0.1:8080/docs](http://127.0.0.1:8080/docs)
+   - Interactive Swagger UI: [http://127.0.0.1:8080/docs](http://127.0.0.1:8080/docs)
 ##### 3.3 Swapping Persona Files
    It is possible to change the complete background identity or role-play parameters without altering code:
    - Navigate to the `server/personas/` directory and adjust if wanted
@@ -143,8 +143,16 @@ To ensure everything is working before connecting the Unreal Engine frontend, ke
 python3 server/tests/test_edi_modes.py
 ```
 
-#### 5. Setup Unreal Engine
-XXX
+#### 5. Frontend
+##### 5.1 Setup Unreal Engine
+The Unreal Engine client acts as the visual and auditory interface.
+- Download the Client: Navigate to the Releases section of this repository and download the latest .zip file
+- Extract & Launch: Unzip the folder to your local drive and run the PBLabsMR.exe
+- Configure Connection: Upon launching, locate the Server URL or Localhost ID field (Default: http://127.0.0.1:8080)
+
+##### 5.2 Interaction
+- Press and Hold [R]: This activates the microphone recording. User is able to talk and ask the assistant something.
+- Release [R]: The audio is sent to the backend and respond with text.
 
 ---
 ## Contributors
