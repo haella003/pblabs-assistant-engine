@@ -64,8 +64,10 @@ pblabs-mr-onboarding-core/
 ├── LICENSE                         # MIT License documentation
 ├── README.md                       # Repository overview documentation
 ├── requirements.txt                # System Python dependencies
-├── setup.bat                       # environment setup and dependency installer for Windows
-└── setup.sh                        # environment setup and dependency installer for macOS/Linux
+├── setup.bat                       # Windows Installation Script
+├── setup.sh                        # macOS/Linux Installation Script
+├── start.bat                       # Windows Launcher
+└── start.sh                        # macOS/Linux Launcher
 ```
 Each subdirectory contains its own `README.md` file detailing localized installation notes, scripts, and configuration guidelines.
 
