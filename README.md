@@ -59,10 +59,11 @@ pblabs-mr-onboarding-core/
 │   │   ├── test_edi_modes.py       # Client CLI logic simulator for text/voice testing
 │   │   └── test_voice.py           # Isolated test script specifically for checking the audio/voice pipeline
 │   └── main.py                     # Primary FastAPI entry point and lifecycle state engine
-├── venv/                           # Isolated local Python virtual environment
+├── .gitignore                      # Rules for excluding system artifacts from Git
 ├── LICENSE                         # MIT License documentation
+├── README.md                       # Repository overview documentation
 ├── requirements.txt                # System Python dependencies
-└── README.md                       # Repository overview documentation
+└── setup.sh                        # environment setup and dependency installer
 ```
 Each subdirectory contains its own `README.md` file detailing localized installation notes, scripts, and configuration guidelines.
 
