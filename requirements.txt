@@ -5,7 +5,6 @@ python-multipart
 python-dotenv
 
 # --- AI & Inference ---
-# We use >= to let the system find the best match for its CPU/GPU
 openai>=1.10.0
 faster-whisper>=1.0.0
 piper-tts>=1.2.0
