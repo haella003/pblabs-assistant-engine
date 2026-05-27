@@ -75,7 +75,8 @@ def main():
                     audio_bytes = base64.b64decode(data["audio_base64"])
                     play_audio(audio_bytes)
                 else:
-                    print("(Voice skipped as requested)")
+                    # print("(Voice skipped as requested)")
+                    pass
             else:
                 print(f"Server Error: {data}")
         

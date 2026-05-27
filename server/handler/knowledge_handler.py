@@ -25,7 +25,7 @@ def build_knowledge_index(vault_path):
 
     # 2. Chunking: Split text into 500-character pieces
     # This ensures EDI gets specific context, not random pages
-    size = 500
+    size = 500 # ADJUST
     chunks = [raw_text[i:i+size] for i in range(0, len(raw_text), size)]
     
     # 3. Create Embeddings

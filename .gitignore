@@ -12,6 +12,4 @@ chat_history/
 
 .vscode/
 
-.setup.sh
-
 .DS_Store

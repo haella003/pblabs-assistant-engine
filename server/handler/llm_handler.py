@@ -9,7 +9,7 @@ from handler import knowledge_handler
 load_dotenv() 
 
 # Ensure this matches the model used in get_edi_response
-MODEL_NAME = "gemma3:4b"
+MODEL_NAME = "gemma4:e4b"
 OLLAMA_GENERATE_URL = "http://localhost:11434/api/generate"
 
 client = OpenAI(
