@@ -103,6 +103,10 @@ chmod +x setup.sh
 ./setup.sh
 ```
 OPTION B: Windows
+Double-click setup.bat or run it in the Terminal:
+```bash
+setup.bat
+```
 
 #### 2. Start the Dependency Model Management
 ```bash
