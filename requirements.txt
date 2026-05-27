@@ -3,6 +3,8 @@ fastapi>=0.110.0
 uvicorn>=0.27.0
 python-multipart
 python-dotenv
+requests
+PyPDF2
 
 # --- AI & Inference ---
 openai>=1.10.0
