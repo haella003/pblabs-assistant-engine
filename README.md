@@ -94,7 +94,7 @@ cd pblabs-assistant-engine
 ```
 
 #### 1. Environment Setup
-OPTION A: macOS/Linux
+##### OPTION A: macOS/Linux
 ```bash
 # Make the script executable
 chmod +x setup.sh
@@ -102,8 +102,8 @@ chmod +x setup.sh
 # Run the setup script
 ./setup.sh
 ```
-OPTION B: Windows
-Double-click setup.bat or run it in the Terminal:
+##### OPTION B: Windows
+Double-click setup.bat or run it in the Terminal
 ```bash
 setup.bat
 ```
