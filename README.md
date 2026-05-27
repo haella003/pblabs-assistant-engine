@@ -117,7 +117,7 @@ The system is designed to be modular. Before running, adjust settings, network p
    - Change "127.0.0.1" to your local network IP or use "0.0.0.0" to listen on all active network interfaces.
 ##### 3.2 Accessing Local API
    Use this if you want to manually trigger the LLM, Whisper, and Piper TTS endpoints directly from your browser.:
-   - **Interactive Swagger UI:** [http://127.0.0.1:8000/docs](http://127.0.0.1:8080/docs)
+   - **Interactive Swagger UI:** [http://127.0.0.1:8080/docs](http://127.0.0.1:8080/docs)
 ##### 3.3 Swapping Persona Files
    It is possible to change the complete background identity or role-play parameters without altering code:
    - Navigate to the `server/personas/` directory and adjust if wanted
