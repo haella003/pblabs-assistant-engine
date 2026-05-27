@@ -23,6 +23,7 @@ This repository is a first version and forms the basic technical framework. Whil
 1. **Advanced Interaction Mechanics & Session Lifecycle**
 * **Dynamic Voice Activity Detection (VAD):** Implementing an audio gating logic to ensure EDI only speaks when the user is finished talking, immediately silences itself if interrupted by the user, and smoothly returns to an active listening state.
 * **Session Lifecycle Boundaries:** Developing and testing definitive session termination logic (e.g., explicit "Goodbye" intent detection or timeout parameters) to clear conversational buffers, reset state flags, and prepare the engine for the next user.
+* **Asynchronous Token Streaming:** Transitioning the FastAPI architecture from static JSON responses to a StreamingResponse model. This would allow the LLM to deliver text "token-by-token" as it is generated, reducing latency.
 
 2. **Multi-Deployment Modalities**
 * **Standalone Desktop/Mobile Chat Application:** Packaging the backend pipeline alongside a lightweight frontend UI as a downloadable application, allowing students to text-chat with EDI's knowledge base outside of the physical lab room context.
